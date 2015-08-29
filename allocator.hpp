@@ -1,6 +1,7 @@
 #ifndef XCBASE_ALLOCATOR_INC
 #define XCBASE_ALLOCATOR_INC 100
 #
+
 #include<xc_config.hpp>
 #ifdef XC_LOCAL_ALLOCATOR
 #include<local_allocator.hpp>
@@ -31,5 +32,6 @@ namespace xc{
 	typedef std::allocator<void> default_allocator;
 }
 #endif
+
 #
 #endif
