@@ -17,10 +17,11 @@ namespace xc{
 				, Acs(Acs_){
 			}
 			reference& operator=(bool val){
-				if(val)Bits = (Bits&(!Acs)) | Acs;
-				else Bits = (Bits&(!Acs));
+				if(val)Bits = ((Bits&(~Acs)) | Acs);
+				else Bits = (Bits&(~Acs));
+				return *this;
 			}
-			operator bool(){ return Bits&Acs; }
+			operator bool(){ return (Bits&Acs)!=0; }
 		};
 	public:
 		bitset():Bits(0){}
@@ -33,12 +34,12 @@ namespace xc{
 		void reset(){ Bits = 0; }
 		void set(unsigned int pos, bool val = true){
 			unsigned int Acs = (1 << pos);
-			if(val)Bits = (Bits&(!Acs)) | Acs;
-			else Bits = (Bits&(!Acs));
+			if(val)Bits = (Bits&(~Acs)) | Acs;
+			else Bits = (Bits&(~Acs));
 		}
 		void reset(unsigned int pos){
 			unsigned int Acs = (1 << pos);
-			Bits = (Bits&(!Acs));
+			Bits = (Bits&(~Acs));
 		}
 		this_bitset& operator<<=(unsigned int num){
 			Bits <<= num;
