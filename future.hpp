@@ -18,9 +18,7 @@ namespace xc{
 	public:
 		virtual ~promise_base(){}
 		virtual bool can_read() = 0;
-		virtual const T& read() = 0;
-		virtual void end_read() = 0;
-		virtual void then(const func_type&) = 0;
+		virtual void read(T&) = 0;
 	};
 	template<typename Alloc>
 	class promise_base<void, Alloc>{
@@ -29,68 +27,33 @@ namespace xc{
 		virtual ~promise_base(){}
 		virtual bool can_read() = 0;
 		virtual void read() = 0;
-		virtual void end_read() = 0;
+	};
+	template<typename T, typename Alloc = default_allocator>
+	class cancelable_promise_base :public promise_base<T, Alloc>{
+		typedef function<void(T), Alloc> func_type;
+	public:
+		virtual bool can_read() = 0;
+		virtual void read(T&) = 0;
+		virtual void cancel() = 0;
+		virtual void then(const func_type&) = 0;
+	};
+	template<typename Alloc>
+	class cancelable_promise_base<void, Alloc>:public promise_base<void, Alloc>{
+		typedef function<void(void), Alloc> func_type;
+	public:
+		virtual bool can_read() = 0;
+		virtual void read() = 0;
+		virtual void cancel() = 0;
 		virtual void then(const func_type&) = 0;
 	};
 
 	//future: 将来取得できる値へのアクセッサ
-	//	promise_baseインターフェースを受け取って生成
+	//	cancelable_promise_baseインターフェースを受け取って生成
+	//	then, cancelが実行可能
 	template<typename T, typename Alloc = default_allocator>
 	class future{
 		typedef function<void(T), Alloc> func_type;
-		typedef promise_base<T, Alloc> my_promise;
-	public:
-		struct canceler{
-		private:
-			my_promise* Ptr;
-		public:
-			canceler() :Ptr(0){}
-			canceler(future& Future_)
-				:Ptr(Future_.Ptr){
-			}
-			operator bool()const{ return Ptr != 0; }
-			void operator()(void){
-				if (Ptr == 0)return;
-				Ptr->end_read();
-				Ptr = 0;
-			}
-			void clear(){ Ptr = 0; }
-		};
-	private:
-		my_promise* Ptr;
-	public:
-		future() :Ptr(0){}
-		future(my_promise& Ref_) :Ptr(&Ref_){}
-		bool valid()const{ return Ptr!=0; }
-		bool can_get()const{ 
-			xc_assert(valid(), invalid_future_exception(100));
-			return Ptr->can_read(); 
-		}
-		T get(){
-			xc_assert(valid(), invalid_future_exception(101));
-			T Val = Ptr->read();
-			Ptr->end_read();
-			Ptr = 0;
-			return xc::move(Val);
-		}
-		void cancel(){
-			xc_assert(valid(), invalid_future_exception(102));
-			Ptr->end_read();
-			Ptr = 0;
-		}
-		canceler then(const func_type& Function_){
-			xc_assert(valid(), invalid_future_exception(103));
-			Ptr->then(Function_);
-			canceler Canceler(*this);
-			Ptr = 0;
-			return Canceler;
-		}
-	};
-	//voidへの特殊化future
-	template<typename Alloc>
-	class future<void, Alloc>{
-		typedef function<void(void), Alloc> func_type;
-		typedef promise_base<void, Alloc> my_promise;
+		typedef cancelable_promise_base<T, Alloc> my_promise;
 	public:
 		struct canceler{
 		private:
@@ -102,7 +65,59 @@ namespace xc{
 			operator bool()const{ return Ptr != 0; }
 			void operator()(void){
 				if(Ptr == 0)return;
-				Ptr->end_read();
+				Ptr->cancel();
+				Ptr = 0;
+			}
+			void clear(){ Ptr = 0; }
+		};
+	private:
+		my_promise* Ptr;
+	public:
+		future() :Ptr(0){}
+		future(my_promise& Ref_) :Ptr(&Ref_){}
+		bool valid()const{ return Ptr != 0; }
+		bool can_get()const{
+			xc_assert(valid(), invalid_future_exception(100));
+			return Ptr->can_read();
+		}
+		T get(){
+			xc_assert(valid(), invalid_future_exception(101));
+			T Val;
+			Ptr->read(Val);
+			Ptr = 0;
+			return xc::move(Val);
+		}
+		void cancel(){
+			xc_assert(valid(), invalid_future_exception(102));
+			Ptr->cancel();
+			Ptr = 0;
+		}
+		canceler then(const func_type& Function_){
+			xc_assert(valid(), invalid_future_exception(103));
+			Ptr->then(Function_);
+			canceler Canceler(*this);
+			Ptr = 0;
+			return Canceler;
+		}
+		my_promise* get_promise(){ return Ptr; }
+	};
+	//voidへの特殊化future
+	template<typename Alloc>
+	class future<void, Alloc>{
+		typedef function<void(void), Alloc> func_type;
+		typedef cancelable_promise_base<void, Alloc> my_promise;
+	public:
+		struct canceler{
+		private:
+			my_promise* Ptr;
+		public:
+			canceler() :Ptr(0){}
+			canceler(future& Future_)
+				:Ptr(Future_.Ptr){}
+			operator bool()const{ return Ptr != 0; }
+			void operator()(void){
+				if(Ptr == 0)return;
+				Ptr->cancel();
 				Ptr = 0;
 			}
 			void clear(){ Ptr = 0; }
@@ -119,12 +134,12 @@ namespace xc{
 		}
 		void get(){
 			xc_assert(valid(), invalid_future_exception(101));
-			Ptr->end_read();
+			Ptr->read();
 			Ptr = 0;
 		}
 		void cancel(){
 			xc_assert(valid(), invalid_future_exception(102));
-			Ptr->end_read();
+			Ptr->cancel();
 			Ptr = 0;
 		}
 		canceler then(const func_type& Function_){
@@ -135,6 +150,56 @@ namespace xc{
 			Ptr = 0;
 			return Canceler;
 		}
+		my_promise* get_promise(){ return Ptr; }
+	};
+
+	//mandatory_future: 将来取得できる値へのアクセッサ
+	//	promise_baseインターフェースを受け取って生成
+	//	受け取り拒否cancelとthenが利用できない
+	template<typename T, typename Alloc = default_allocator>
+	class mandatory_future{
+		typedef promise_base<T, Alloc> my_promise;
+	private:
+		my_promise* Ptr;
+	public:
+		mandatory_future() :Ptr(0){}
+		mandatory_future(my_promise& Ref_) :Ptr(&Ref_){}
+		mandatory_future(future<T, Alloc>& Future) :Ptr(Future.get_promise()){}
+		bool valid()const{ return Ptr != 0; }
+		bool can_get()const{
+			xc_assert(valid(), invalid_future_exception(100));
+			return Ptr->can_read();
+		}
+		T get(){
+			xc_assert(valid(), invalid_future_exception(101));
+			T Val;
+			Ptr->read(Val);
+			Ptr = 0;
+			return xc::move(Val);
+		}
+		my_promise* get_promise(){ return Ptr; }
+	};
+	//voidへの特殊化future
+	template<typename Alloc>
+	class mandatory_future<void, Alloc>{
+		typedef promise_base<void, Alloc> my_promise;
+	private:
+		my_promise* Ptr;
+	public:
+		mandatory_future() :Ptr(0){}
+		mandatory_future(my_promise& Ref_) :Ptr(&Ref_){}
+		mandatory_future(future<void, Alloc>& Future) :Ptr(Future.get_promise()){}
+		bool valid()const{ return Ptr != 0; }
+		bool can_get()const{
+			xc_assert(valid(), invalid_future_exception(100));
+			return Ptr->can_read();
+		}
+		void get(){
+			xc_assert(valid(), invalid_future_exception(101));
+			Ptr->read();
+			Ptr = 0;
+		}
+		my_promise* get_promise(){ return Ptr; }
 	};
 
 	//標準promise：内部に変数を保持する形のpromise
@@ -145,7 +210,7 @@ namespace xc{
 	public:
 		typedef future<T, Alloc> my_future;
 	private:
-		struct base :public promise_base<T, Alloc>{
+		struct base :public cancelable_promise_base<T, Alloc>{
 			typedef function<void(T), Alloc> func_type;
 		private:
 			T Val;
@@ -154,10 +219,14 @@ namespace xc{
 			func_type InformFunc;
 		public:
 			base() :IsValid(false), IsWaiting(false){}
-		public://promise_base overload functions
+		public://cancelable_promise_base overload functions
 			bool can_read(){ return !IsWaiting && IsValid; }
-			const T& read(){ return Val; }
-			void end_read(){
+			void read(T& Ref){ 
+				Ref = Val;
+				IsValid = false;
+				InformFunc.clear();
+			}
+			void cancel(){
 				IsValid = false;
 				InformFunc.clear();
 			}
@@ -172,7 +241,7 @@ namespace xc{
 				if(!IsWaiting && IsValid){
 					func_type tmpFunc;
 					tmpFunc.swap(InformFunc);
-					end_read();
+					cancel();
 					tmpFunc(Val);
 				}
 			}
@@ -197,7 +266,7 @@ namespace xc{
 				if(InformFunc){
 					func_type tmpFunc;
 					tmpFunc.swap(InformFunc);
-					end_read();
+					cancel();
 					tmpFunc(Val);
 				}
 			}
@@ -232,7 +301,7 @@ namespace xc{
 	public:
 		typedef future<void, Alloc> my_future;
 	private:
-		struct base :public promise_base<void, Alloc>{
+		struct base :public cancelable_promise_base<void, Alloc>{
 			typedef function<void(void), Alloc> func_type;
 		private:
 			bool IsValid;
@@ -240,12 +309,14 @@ namespace xc{
 			func_type InformFunc;
 		public:
 			base() :IsValid(false), IsWritten(true){}
-		public://promise_base overload functions
+		public://cancelable_promise_base overload functions
 			bool can_read(){ return IsWritten; }
-			void read(){}
-			void end_read(){
+			void read(){
 				IsValid = false;
 				InformFunc.clear();
+			}
+			void cancel(){
+				read();
 			}
 			void then(const func_type& InformFunc_){
 				if(!IsValid)return;
@@ -258,7 +329,7 @@ namespace xc{
 				if(IsWritten && IsValid){
 					func_type tmpFunc;
 					tmpFunc.swap(InformFunc);
-					end_read();
+					cancel();
 					tmpFunc();
 				}
 			}
@@ -278,7 +349,7 @@ namespace xc{
 				if(InformFunc){
 					func_type tmpFunc;
 					tmpFunc.swap(InformFunc);
-					end_read();
+					cancel();
 					tmpFunc();
 				}
 			}
