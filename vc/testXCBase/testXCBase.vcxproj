@@ -156,6 +156,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\allocator.hpp" />
+    <ClInclude Include="..\..\array_queue.hpp" />
+    <ClInclude Include="..\..\bitset.hpp" />
+    <ClInclude Include="..\..\bytes.hpp" />
+    <ClInclude Include="..\..\constexpr_no.hpp" />
+    <ClInclude Include="..\..\either.hpp" />
+    <ClInclude Include="..\..\exceptions.hpp" />
+    <ClInclude Include="..\..\function.hpp" />
+    <ClInclude Include="..\..\future.hpp" />
+    <ClInclude Include="..\..\lock.hpp" />
+    <ClInclude Include="..\..\rvalue_reference.hpp" />
+    <ClInclude Include="..\..\shared_bytes.hpp" />
+    <ClInclude Include="..\..\type.hpp" />
+    <ClInclude Include="..\..\type_traits.hpp" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
