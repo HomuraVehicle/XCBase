@@ -24,7 +24,7 @@ namespace xc{
 	};
 	template<typename Alloc>
 	class promise_base<void, Alloc>{
-		typedef function<void(T), Alloc> func_type;
+		typedef function<void(void), Alloc> func_type;
 	public:
 		virtual ~promise_base(){}
 		virtual bool can_read() = 0;
@@ -74,13 +74,12 @@ namespace xc{
 			return xc::move(Val);
 		}
 		void cancel(){
-			if(!valid())return;
+			xc_assert(valid(), invalid_future_exception(102));
 			Ptr->end_read();
 			Ptr = 0;
 		}
 		canceler then(const func_type& Function_){
-			if (!valid())return canceler();
-
+			xc_assert(valid(), invalid_future_exception(103));
 			Ptr->then(Function_);
 			canceler Canceler(*this);
 			Ptr = 0;
@@ -91,7 +90,7 @@ namespace xc{
 	template<typename Alloc>
 	class future<void, Alloc>{
 		typedef function<void(void), Alloc> func_type;
-		typedef promise_base<T, Alloc> my_promise;
+		typedef promise_base<void, Alloc> my_promise;
 	public:
 		struct canceler{
 		private:
@@ -129,7 +128,7 @@ namespace xc{
 			Ptr = 0;
 		}
 		canceler then(const func_type& Function_){
-			if(!valid())return canceler();
+			xc_assert(valid(), invalid_future_exception(103));
 
 			Ptr->then(Function_);
 			canceler Canceler(*this);
@@ -151,12 +150,12 @@ namespace xc{
 		private:
 			T Val;
 			bool IsValid;
-			bool IsWritten;
+			bool IsWaiting;
 			func_type InformFunc;
 		public:
-			base() :IsValid(false), IsWritten(true){}
+			base() :IsValid(false), IsWaiting(false){}
 		public://promise_base overload functions
-			bool can_read(){ return IsWritten; }
+			bool can_read(){ return !IsWaiting && IsValid; }
 			const T& read(){ return Val; }
 			void end_read(){
 				IsValid = false;
@@ -170,7 +169,7 @@ namespace xc{
 				//書き込み済みなら、InformFuncを実行
 				//	end_writeが割り込みで実行された場合があるので、
 				//	IsValidももう一度調べる必要がある。
-				if(IsWritten && IsValid){
+				if(!IsWaiting && IsValid){
 					func_type tmpFunc;
 					tmpFunc.swap(InformFunc);
 					end_read();
@@ -178,22 +177,22 @@ namespace xc{
 				}
 			}
 		public:
-			bool can_ready_future()const{ return IsWritten && !IsValid; }
-			void ready_future()const{
+			bool can_ready_future()const{ return !IsWaiting && !IsValid; }
+			void ready_future(){
 				IsValid = true;
-				IsWritten = false;
+				IsWaiting = true;
 			}
-			bool can_write()const{ return !IsWritten; }
+			bool is_wait_write()const{ return IsWaiting; }
 			void write(const T& val){
-				Val = val;
+				if(is_wait_write())Val = val;
 			}
 			void write(xc::rvalue_reference<T> rref){
-				Val = rref;
+				if(is_wait_write())Val = rref;
 			}
 			void end_write(){
-				if(IsWritten)return;
-				IsWritten = true;
-				if(IsValid == false)return;
+				if(!IsWaiting)return;
+				IsWaiting = false;
+				if(!IsValid)return;
 
 				if(InformFunc){
 					func_type tmpFunc;
@@ -205,11 +204,13 @@ namespace xc{
 		};
 	private:
 		base Base;
+	public:
+		promise():Base(){}
 	private://コピー禁止
 		promise(const my_type&){}
 		const my_type& operator=(const my_type&);
 	public:
-		bool valid(){ return Base.can_write(); }
+		bool is_wait_value(){ return Base.is_wait_write(); }
 		void set_value(const T& val){
 			Base.write(val);
 			Base.end_write();
