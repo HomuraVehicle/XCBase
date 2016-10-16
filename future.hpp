@@ -12,24 +12,24 @@ namespace xc{
 	};
 
 	//futureへのpromiseからのインターフェース
-	template<typename T, typename Alloc = default_allocator>
+	template<typename T>
 	class promise_base{
-		typedef function<void(T), Alloc> func_type;
 	public:
 		virtual ~promise_base(){}
 		virtual bool can_read() = 0;
 		virtual void read(T&) = 0;
+		virtual void cancel() = 0;
 	};
-	template<typename Alloc>
-	class promise_base<void, Alloc>{
-		typedef function<void(void), Alloc> func_type;
+	template<>
+	class promise_base<void>{
 	public:
 		virtual ~promise_base(){}
 		virtual bool can_read() = 0;
 		virtual void read() = 0;
+		virtual void cancel() = 0;
 	};
 	template<typename T, typename Alloc = default_allocator>
-	class cancelable_promise_base :public promise_base<T, Alloc>{
+	class then_promise_base :public promise_base<T>{
 		typedef function<void(T), Alloc> func_type;
 	public:
 		virtual bool can_read() = 0;
@@ -38,7 +38,7 @@ namespace xc{
 		virtual void then(const func_type&) = 0;
 	};
 	template<typename Alloc>
-	class cancelable_promise_base<void, Alloc>:public promise_base<void, Alloc>{
+	class then_promise_base<void, Alloc>:public promise_base<void>{
 		typedef function<void(void), Alloc> func_type;
 	public:
 		virtual bool can_read() = 0;
@@ -48,12 +48,12 @@ namespace xc{
 	};
 
 	//future: 将来取得できる値へのアクセッサ
-	//	cancelable_promise_baseインターフェースを受け取って生成
-	//	then, cancelが実行可能
+	//	then_promise_baseインターフェースを受け取って生成
+	//	thenが実行可能
 	template<typename T, typename Alloc = default_allocator>
 	class future{
 		typedef function<void(T), Alloc> func_type;
-		typedef cancelable_promise_base<T, Alloc> my_promise;
+		typedef then_promise_base<T, Alloc> my_promise;
 	public:
 		struct canceler{
 		private:
@@ -105,7 +105,7 @@ namespace xc{
 	template<typename Alloc>
 	class future<void, Alloc>{
 		typedef function<void(void), Alloc> func_type;
-		typedef cancelable_promise_base<void, Alloc> my_promise;
+		typedef then_promise_base<void, Alloc> my_promise;
 	public:
 		struct canceler{
 		private:
@@ -153,18 +153,18 @@ namespace xc{
 		my_promise* get_promise(){ return Ptr; }
 	};
 
-	//mandatory_future: 将来取得できる値へのアクセッサ
+	//polling_future: 将来取得できる値へのアクセッサ
 	//	promise_baseインターフェースを受け取って生成
-	//	受け取り拒否cancelとthenが利用できない
+	//	thenが利用できない
 	template<typename T, typename Alloc = default_allocator>
-	class mandatory_future{
+	class polling_future{
 		typedef promise_base<T, Alloc> my_promise;
 	private:
 		my_promise* Ptr;
 	public:
-		mandatory_future() :Ptr(0){}
-		mandatory_future(my_promise& Ref_) :Ptr(&Ref_){}
-		mandatory_future(future<T, Alloc>& Future) :Ptr(Future.get_promise()){}
+		polling_future() :Ptr(0){}
+		polling_future(my_promise& Ref_) :Ptr(&Ref_){}
+		polling_future(future<T, Alloc>& Future) :Ptr(Future.get_promise()){}
 		bool valid()const{ return Ptr != 0; }
 		bool can_get()const{
 			xc_assert(valid(), invalid_future_exception(100));
@@ -177,18 +177,23 @@ namespace xc{
 			Ptr = 0;
 			return xc::move(Val);
 		}
+		void cancel(){
+			xc_assert(valid(), invalid_future_exception(102));
+			Ptr->cancel();
+			Ptr = 0;
+		}
 		my_promise* get_promise(){ return Ptr; }
 	};
 	//voidへの特殊化future
 	template<typename Alloc>
-	class mandatory_future<void, Alloc>{
+	class polling_future<void, Alloc>{
 		typedef promise_base<void, Alloc> my_promise;
 	private:
 		my_promise* Ptr;
 	public:
-		mandatory_future() :Ptr(0){}
-		mandatory_future(my_promise& Ref_) :Ptr(&Ref_){}
-		mandatory_future(future<void, Alloc>& Future) :Ptr(Future.get_promise()){}
+		polling_future() :Ptr(0){}
+		polling_future(my_promise& Ref_) :Ptr(&Ref_){}
+		polling_future(future<void, Alloc>& Future) :Ptr(Future.get_promise()){}
 		bool valid()const{ return Ptr != 0; }
 		bool can_get()const{
 			xc_assert(valid(), invalid_future_exception(100));
@@ -197,6 +202,11 @@ namespace xc{
 		void get(){
 			xc_assert(valid(), invalid_future_exception(101));
 			Ptr->read();
+			Ptr = 0;
+		}
+		void cancel(){
+			xc_assert(valid(), invalid_future_exception(102));
+			Ptr->cancel();
 			Ptr = 0;
 		}
 		my_promise* get_promise(){ return Ptr; }
@@ -210,7 +220,7 @@ namespace xc{
 	public:
 		typedef future<T, Alloc> my_future;
 	private:
-		struct base :public cancelable_promise_base<T, Alloc>{
+		struct base :public then_promise_base<T, Alloc>{
 			typedef function<void(T), Alloc> func_type;
 		private:
 			T Val;
@@ -219,7 +229,7 @@ namespace xc{
 			func_type InformFunc;
 		public:
 			base() :IsValid(false), IsWaiting(false){}
-		public://cancelable_promise_base overload functions
+		public://then_promise_base overload functions
 			bool can_read(){ return !IsWaiting && IsValid; }
 			void read(T& Ref){ 
 				Ref = Val;
@@ -301,7 +311,7 @@ namespace xc{
 	public:
 		typedef future<void, Alloc> my_future;
 	private:
-		struct base :public cancelable_promise_base<void, Alloc>{
+		struct base :public then_promise_base<void, Alloc>{
 			typedef function<void(void), Alloc> func_type;
 		private:
 			bool IsValid;
@@ -309,7 +319,7 @@ namespace xc{
 			func_type InformFunc;
 		public:
 			base() :IsValid(false), IsWritten(true){}
-		public://cancelable_promise_base overload functions
+		public://then_promise_base overload functions
 			bool can_read(){ return IsWritten; }
 			void read(){
 				IsValid = false;
