@@ -50,6 +50,7 @@ namespace xc{
 	//future: 将来取得できる値へのアクセッサ
 	//	then_promise_baseインターフェースを受け取って生成
 	//	thenが実行可能
+	
 	template<typename T, typename Alloc = default_allocator>
 	class future{
 		typedef function<void(T), Alloc> func_type;
@@ -158,7 +159,7 @@ namespace xc{
 	//	thenが利用できない
 	template<typename T, typename Alloc = default_allocator>
 	class polling_future{
-		typedef promise_base<T, Alloc> my_promise;
+		typedef promise_base<T> my_promise;
 	private:
 		my_promise* Ptr;
 	public:
@@ -187,7 +188,7 @@ namespace xc{
 	//voidへの特殊化future
 	template<typename Alloc>
 	class polling_future<void, Alloc>{
-		typedef promise_base<void, Alloc> my_promise;
+		typedef promise_base<void> my_promise;
 	private:
 		my_promise* Ptr;
 	public:
