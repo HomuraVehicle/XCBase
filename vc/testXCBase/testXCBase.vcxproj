@@ -160,6 +160,7 @@
     <ClInclude Include="..\..\array_queue.hpp" />
     <ClInclude Include="..\..\bitset.hpp" />
     <ClInclude Include="..\..\bytes.hpp" />
+    <ClInclude Include="..\..\chain.hpp" />
     <ClInclude Include="..\..\constexpr_no.hpp" />
     <ClInclude Include="..\..\either.hpp" />
     <ClInclude Include="..\..\exceptions.hpp" />
