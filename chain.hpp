@@ -28,7 +28,7 @@ namespace xc{
 				return *this;
 			}
 		public:
-			operator bool(){ return next == 0; }
+			operator bool()const{ return next == 0; }
 			T& operator*(){ return value; }
 			const T& operator*()const{ return value; }
 			T* operator->(){ return &value; }
@@ -261,6 +261,13 @@ namespace xc{
 
 			element::connect(Prev, *(last.current()));
 			return iterator(last.current());
+		}
+		iterator find(const element& Elem){
+			iterator Itr = begin();
+			for(;Itr != end(); ++Itr){
+				if(Itr.current() == &Elem)break;
+			}
+			return Itr;
 		}
 		void swap(this_type& other){
 			std::swap(Sentinel.prev, other.Sentinel.prev);
