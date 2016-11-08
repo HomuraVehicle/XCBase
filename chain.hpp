@@ -488,7 +488,6 @@ namespace xc{
 		}
 		void swap(this_type& other){
 			std::swap(Sentinel.next, other.Sentinel.next);
-			std::swap(Size, other.Size);
 		}
 		void clear(){
 			element* p1 = Sentinel.next;
