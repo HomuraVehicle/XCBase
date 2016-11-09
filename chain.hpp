@@ -305,7 +305,7 @@ namespace xc{
 		typedef compare_ compare;
 	public:
 		struct element{
-			friend struct sorted_chain<T>;
+			friend struct sorted_chain<T, compare>;
 		private:
 			T value;
 			element *next;
@@ -320,7 +320,7 @@ namespace xc{
 				return *this;
 			}
 		public:
-			operator bool(){ return next == 0; }
+			operator bool()const{ return next == 0; }
 			T& operator*(){ return value; }
 			const T& operator*()const{ return value; }
 			T* operator->(){ return &value; }
