@@ -8,7 +8,6 @@
 namespace xc{
 	struct bytes{
 		typedef bytes this_type;
-		typedef this_type& this_reference;
 		typedef xc::rvalue_reference<this_type> this_rvalue_reference;
 		typedef unsigned char* pointer;
 		typedef unsigned char& reference;
@@ -46,7 +45,7 @@ namespace xc{
 			, Dlt(){
 			swap(rref_.ref);
 		}
-		const this_reference operator=(this_rvalue_reference rref_){
+		this_type& operator=(this_rvalue_reference rref_){
 			if(this != &(rref_.ref)){
 				clear();
 				swap(rref_.ref);
@@ -55,8 +54,8 @@ namespace xc{
 		}
 		~bytes(){ clear();}
 	private://コピーは禁止
-		bytes(const this_reference my_);
-		const this_reference operator=(const this_reference my_);
+		bytes(const this_type& my_);
+		this_type& operator=(const this_type& my_);
 	public:
 		//配列を解放
 		void clear(){
@@ -71,14 +70,14 @@ namespace xc{
 		}
 		//配列を解放し、新しく配列を保持
 		template<typename deleter_>
-		void assign(pointer ptr_, size_type size_, deleter_ dlt_){
+		void assign(pointer Ptr_, size_type Size_, deleter_ Dlt_){
 			clear();
 
-			if(ptr_ == 0 || size_ == 0)return;
+			if(Ptr_ == 0 || Size_ == 0)return;
 
-			Ptr = ptr_;
-			Size = size_;
-			Dlt = dlt_;
+			Ptr = Ptr_;
+			Size = Size_;
+			Dlt = Dlt_;
 		}
 		//配列を開放し、新しく配列を保持
 		template<typename alloc = default_allocator>
@@ -98,7 +97,7 @@ namespace xc{
 			Dlt = xc::ref(Deleter);
 		}
 		//配列同士を交換
-		void swap(this_reference my_){
+		void swap(this_type& my_){
 			if(&my_ == this)return;
 
 			pointer tmpPtr = Ptr;

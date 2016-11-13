@@ -189,6 +189,10 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="test_future.cpp" />
+    <ClCompile Include="test_shared_bytes.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

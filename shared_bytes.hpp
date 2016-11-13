@@ -9,151 +9,152 @@
 namespace xc{
 	template<typename Alloc=default_allocator>
 	struct shared_bytes{
-		typedef shared_bytes my_type;
-		typedef my_type& my_reference;
-		typedef xc::rvalue_reference<my_type> my_rvalue_reference;
+		typedef shared_bytes this_type;
+		typedef xc::rvalue_reference<this_type> this_rvalue_reference;
+	public:
 		typedef unsigned char* pointer;
 		typedef unsigned char& reference;
-		typedef uint16 size_type;
+		typedef unsigned int size_type;
 		typedef uint16 usecnt_type;
 		typedef pointer iterator;
 		typedef const pointer const_iterator;
 		typedef typename Alloc::template rebind<unsigned char>::other allocator;
 	private:
-		void allocate(size_type Size_){
-			unsigned char* base_ptr = allocator().allocate(sizeof(usecnt_type) + Size_);
-			pUseCnt = reinterpret_cast<usecnt_type*>(base_ptr);
-			*pUseCnt = 1;
-			Ptr = base_ptr + sizeof(usecnt_type);
-			Size = Size_;
+		void allocate(pointer Ptr_, size_type Size_){
+			if(Ptr_ == 0){
+				unsigned char* BasePtr = allocator().allocate(sizeof(usecnt_type) + Size_);
+				usecnt_type* pUseCnt = reinterpret_cast<usecnt_type*>(BasePtr);
+				*pUseCnt = 1;
+
+				Ptr = BasePtr + sizeof(usecnt_type);
+				Size = Size_;
+			} else{
+				usecnt_type* pUseCnt = reinterpret_cast<usecnt_type*>(Ptr_ - sizeof(usecnt_type));
+				++(*pUseCnt);
+
+				Ptr = Ptr_;
+				Size = Size_;
+			}
 		}
 		struct deleter{
-			void operator()(void* ptr_, size_type size_){
-				if(ptr_ == 0)return;
+			void operator()(void* Ptr_, size_type Size_){
+				if(Ptr_ == 0)return;
 
-				usecnt_type* pUseCnt = reinterpret_cast<usecnt_type*>(static_cast<unsigned char*>(ptr_)-sizeof(usecnt_type));
+				usecnt_type* pUseCnt = reinterpret_cast<usecnt_type*>(static_cast<unsigned char*>(Ptr_)-sizeof(usecnt_type));
 				if(*pUseCnt == 0)return;
 
 				if(--(*pUseCnt) == 0){
-					allocator().deallocate(reinterpret_cast<unsigned char*>(pUseCnt), size_ + sizeof(usecnt_type));
+					allocator().deallocate(reinterpret_cast<unsigned char*>(pUseCnt), Size_ + sizeof(usecnt_type));
 				}
 			}
 		};
 		static deleter Deleter;
 	private:
-		pointer Ptr;
+		pointer Ptr;			//[-2:0]: UseCountã€[0:Size]: ãƒ‡ãƒ¼ã‚¿ã‚¢ãƒ‰ãƒ¬ã‚¹
 		size_type Size;
-		usecnt_type* pUseCnt;
 	public:
 		shared_bytes()
 			: Ptr(0)
-			, Size(0)
-			, pUseCnt(0){
+			, Size(0){
 		}
-		shared_bytes(size_type Size_)
+		explicit shared_bytes(size_type Size_)
 			: Ptr(0)
-			, Size(0)
-			, pUseCnt(0){
+			, Size(0){
 			assign(Size_);
 		}
-		explicit shared_bytes(my_rvalue_reference rref_)
+		explicit shared_bytes(this_rvalue_reference rref_)
 			: Ptr(0)
-			, Size(0)
-			, pUseCnt(0){
+			, Size(0){
 			swap(rref_.ref);
 		}
-		const my_reference operator=(my_rvalue_reference rref_){
+		const this_type& operator=(this_rvalue_reference rref_){
 			if(this != &(rref_.ref)){
 				clear();
 				swap(rref_.ref);
 			}
 			return *this;
 		}
-		shared_bytes(const my_reference my_)
+		shared_bytes(const this_type& my_)
 			: Ptr(0)
-			, Size(0)
-			, pUseCnt(0){
-			*this = my_;
+			, Size(0){
+			
+			allocate(my_.Ptr, my_.Size);
 		}
-		const my_reference operator=(const my_reference my_){
+		const this_type& operator=(const this_type& my_){
 			if(this != &my_){
 				clear();
-				if(my_.Ptr != 0){
-					++(*(my_.pUseCnt));	//share
-					Ptr = my_.Ptr;
-					Size = my_.Size;
-					pUseCnt = my_.pUseCnt;
-				}
+				
+				allocate(my_.Ptr, my_.Size);
 			}
 			return *this;
 		}
 		~shared_bytes(){ clear(); }
 	public:
-		//”z—ñ‚ğ‰ğ•ú
+		//é…åˆ—ã‚’è§£æ”¾
 		void clear(){
 			if(Ptr == 0)return;
+
 			Deleter(Ptr, Size);
+
 			Ptr = 0;
 			Size = 0;
-			pUseCnt = 0;
 		}
-		//”z—ñ‚ğ‰ğ•ú‚µAV‚µ‚­”z—ñ‚ğ•Û
-		void assign(size_type size_){
+		//é…åˆ—ã‚’è§£æ”¾ã—ã€æ–°ã—ãé…åˆ—ã‚’ä¿æŒ
+		void assign(size_type Size_){
 			clear();
 
-			if(size_ == 0)return;
+			if(Size_ == 0)return;
 
-			allocate(size_);
+			allocate(0, Size_);
 		}
-		//”z—ñ“¯m‚ğŒğŠ·
-		void swap(my_reference my_){
+		//é…åˆ—åŒå£«ã‚’äº¤æ›
+		void swap(this_type& my_){
 			pointer tmpPtr = Ptr;
 			size_type tmpSize = Size;
-			usecnt_type* tmppUseCnt = pUseCnt;
 
 			Ptr = my_.Ptr;
 			Size = my_.Size;
-			pUseCnt = my_.pUseCnt;
 
 			my_.Ptr = tmpPtr;
 			my_.Size = tmpSize;
-			my_.pUseCnt = tmppUseCnt;
 		}
-		//bytes‚ğì¬
+		//bytesã‚’ä½œæˆ
 		bytes make_bytes(){
+			usecnt_type* pUseCnt = reinterpret_cast<usecnt_type*>(Ptr - sizeof(usecnt_type));
 			++(*pUseCnt);
+
 			return xc::move(bytes(Ptr, Size, xc::ref(Deleter)));
 		}
 	public:
-		//”z—ñ‚ğŠÇ—‚µ‚Ä‚¢‚é‚©
+		//é…åˆ—ã‚’ç®¡ç†ã—ã¦ã„ã‚‹ã‹
 		operator bool()const{ return Ptr != 0; }
-		//”z—ñ‚ğŠÇ—‚µ‚Ä‚¢‚é‚©
-		bool empty()const{ return Ptr != 0; }
-		//”z—ñæ“ªƒAƒhƒŒƒXæ“¾
+		//é…åˆ—ã‚’ç®¡ç†ã—ã¦ã„ã‚‹ã‹
+		bool empty()const{ return Ptr == 0; }
+		//é…åˆ—å…ˆé ­ã‚¢ãƒ‰ãƒ¬ã‚¹å–å¾—
 		pointer get(){ return Ptr; }
-		//”z—ñæ“ªƒAƒhƒŒƒXæ“¾(cosnt)
+		//é…åˆ—å…ˆé ­ã‚¢ãƒ‰ãƒ¬ã‚¹å–å¾—(cosnt)
 		const pointer get()const{ return Ptr; }
-		//”z—ñ‚ÖƒAƒNƒZƒX
-		reference operator[](size_type size_){ return Ptr[size_]; }
-		//”z—ñ‚ÖƒAƒNƒZƒX(const)
-		const reference operator[](size_type size_)const{ return Ptr[size_]; }
-		//”z—ñ‚ÖƒAƒNƒZƒX
-		reference at(size_type size_){ return Ptr[size_]; }
-		//”z—ñ‚ÖƒAƒNƒZƒX(const)
-		const reference at(size_type size_)const{ return Ptr[size_]; }
-		//ƒTƒCƒY‚ğæ“¾
+		//é…åˆ—ã¸ã‚¢ã‚¯ã‚»ã‚¹
+		reference operator[](size_type Pos_){ return Ptr[Pos_]; }
+		//é…åˆ—ã¸ã‚¢ã‚¯ã‚»ã‚¹(const)
+		const reference operator[](size_type Pos_)const{ return Ptr[Pos_]; }
+		//é…åˆ—ã¸ã‚¢ã‚¯ã‚»ã‚¹
+		reference at(size_type Pos_){ return Ptr[Pos_]; }
+		//é…åˆ—ã¸ã‚¢ã‚¯ã‚»ã‚¹(const)
+		const reference at(size_type Pos_)const{ return Ptr[Pos_]; }
+		//ã‚µã‚¤ã‚ºã‚’å–å¾—
 		size_type size()const{ return Size; }
-		//”z—ñ‚Éƒf[ƒ^‚ğ‹l‚ß‚é
-		void fill(unsigned char data_){
+		//é…åˆ—ã«ãƒ‡ãƒ¼ã‚¿ã‚’è©°ã‚ã‚‹
+		void fill(unsigned char Data_){
 			for(iterator itr = begin(); itr != end(); ++itr){
-				*itr = data_;
+				*itr = Data_;
 			}
 		}
 	public:
-		//iteratoræ“¾ŠÖ”
+		//iteratorå–å¾—é–¢æ•°
 		iterator begin(){ return get(); }
 		iterator end(){ return get() + size(); }
-		//const_iteratoræ“¾ŠÖ”
+		//const_iteratorå–å¾—é–¢æ•°
 		const_iterator begin()const{ return get(); }
 		const_iterator end()const{ return get() + size(); }
 	};
