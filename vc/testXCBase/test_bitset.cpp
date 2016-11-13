@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
-#include <bitset.hpp>
+#include "../../bitset.hpp"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace xc{		

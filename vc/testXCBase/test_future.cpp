@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
-#include <future.hpp>
+#include "../../future.hpp"
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace xc{
