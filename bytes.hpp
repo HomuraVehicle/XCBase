@@ -9,6 +9,7 @@ namespace xc{
 	struct bytes{
 		typedef bytes this_type;
 		typedef xc::rvalue_reference<this_type> this_rvalue_reference;
+	public:
 		typedef unsigned char* pointer;
 		typedef unsigned char& reference;
 		typedef unsigned int size_type;

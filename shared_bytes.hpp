@@ -9,7 +9,7 @@
 namespace xc{
 	template<typename Alloc=default_allocator>
 	struct shared_bytes{
-		typedef shared_bytes this_type;
+		typedef shared_bytes<Alloc> this_type;
 		typedef xc::rvalue_reference<this_type> this_rvalue_reference;
 	public:
 		typedef unsigned char* pointer;
