@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="XCBase">
+      <UniqueIdentifier>{7357ff82-ad50-4e8f-9f37-b2aa5c66e4df}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -22,49 +25,49 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="..\..\allocator.hpp">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>XCBase</Filter>
     </ClInclude>
     <ClInclude Include="..\..\array_queue.hpp">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>XCBase</Filter>
     </ClInclude>
     <ClInclude Include="..\..\bitset.hpp">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>XCBase</Filter>
     </ClInclude>
     <ClInclude Include="..\..\bytes.hpp">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\constexpr_no.hpp">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\either.hpp">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\exceptions.hpp">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\function.hpp">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\future.hpp">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lock.hpp">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\rvalue_reference.hpp">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\shared_bytes.hpp">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\type.hpp">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\type_traits.hpp">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>XCBase</Filter>
     </ClInclude>
     <ClInclude Include="..\..\chain.hpp">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>XCBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\constexpr_no.hpp">
+      <Filter>XCBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\either.hpp">
+      <Filter>XCBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\exceptions.hpp">
+      <Filter>XCBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\function.hpp">
+      <Filter>XCBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\future.hpp">
+      <Filter>XCBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lock.hpp">
+      <Filter>XCBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\rvalue_reference.hpp">
+      <Filter>XCBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\shared_bytes.hpp">
+      <Filter>XCBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\type.hpp">
+      <Filter>XCBase</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\type_traits.hpp">
+      <Filter>XCBase</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -75,6 +78,9 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="test_future.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bytes.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>

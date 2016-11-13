@@ -7,12 +7,12 @@
 #include"function.hpp"
 namespace xc{
 	struct bytes{
-		typedef bytes my_type;
-		typedef my_type& my_reference;
-		typedef xc::rvalue_reference<my_type> my_rvalue_reference;
+		typedef bytes this_type;
+		typedef this_type& this_reference;
+		typedef xc::rvalue_reference<this_type> this_rvalue_reference;
 		typedef unsigned char* pointer;
 		typedef unsigned char& reference;
-		typedef uint16 size_type;
+		typedef unsigned int size_type;
 		typedef xc::function<void(void*, size_type)> deleter;
 		typedef unsigned char* iterator;
 		typedef const unsigned char* const_iterator;
@@ -31,17 +31,7 @@ namespace xc{
 			: Ptr(0)
 			, Size(0)
 			, Dlt(){
-			typedef typename alloc::template rebind<unsigned char>::other allocator;
-			struct deleter{
-				void operator()(void* ptr, bytes::size_type size){
-					allocator().deallocate(static_cast<unsigned char*>(ptr), size);
-				}
-			};
-			static deleter Deleter;
-
-			Ptr = static_cast<unsigned char*>(Alloc.allocate(Size_));
-			Size = Size_;
-			Dlt = xc::ref(Deleter);
+			assign(Size_, Alloc);
 		}
 		bytes(pointer Ptr_, size_type Size_, const deleter&  Dlt_)
 			: Ptr(0)
@@ -49,27 +39,25 @@ namespace xc{
 			, Dlt(){
 			assign(Ptr_, Size_, Dlt_);
 		}
-		bytes(my_rvalue_reference rref_)
+		bytes(this_rvalue_reference rref_)
 			: Ptr(0)
 			, Size(0)
 			, Dlt(){
 			swap(rref_.ref);
 		}
-		const my_reference operator=(my_rvalue_reference rref_){
+		const this_reference operator=(this_rvalue_reference rref_){
 			if(this != &(rref_.ref)){
 				clear();
 				swap(rref_.ref);
 			}
 			return *this;
 		}
-		~bytes(){ 
-			clear();
-		}
-	private://ƒRƒs[‚Í‹Ö~
-		bytes(const my_reference my_);
-		const my_reference operator=(const my_reference my_);
+		~bytes(){ clear();}
+	private://ã‚³ãƒ”ãƒ¼ã¯ç¦æ­¢
+		bytes(const this_reference my_);
+		const this_reference operator=(const this_reference my_);
 	public:
-		//”z—ñ‚ğ‰ğ•ú
+		//é…åˆ—ã‚’è§£æ”¾
 		void clear(){
 			if(Ptr==0)return;
 
@@ -80,7 +68,7 @@ namespace xc{
 				Size = 0;
 			}
 		}
-		//”z—ñ‚ğ‰ğ•ú‚µAV‚µ‚­”z—ñ‚ğ•Û
+		//é…åˆ—ã‚’è§£æ”¾ã—ã€æ–°ã—ãé…åˆ—ã‚’ä¿æŒ
 		void assign(pointer ptr_, size_type size_, const deleter& dlt_){
 			clear();
 
@@ -90,7 +78,7 @@ namespace xc{
 			Size = size_;
 			Dlt = dlt_;
 		}
-		//”z—ñ‚ğŠJ•ú‚µAV‚µ‚­”z—ñ‚ğ•Û
+		//é…åˆ—ã‚’é–‹æ”¾ã—ã€æ–°ã—ãé…åˆ—ã‚’ä¿æŒ
 		template<typename alloc = default_allocator>
 		void assign(size_type Size_, alloc Alloc=alloc()){
 			clear();
@@ -103,29 +91,26 @@ namespace xc{
 			};
 			static deleter Deleter;
 
-			Ptr = static_cast<unsigned char*>(Alloc.allocate(Size_));
+			Ptr = static_cast<unsigned char*>(allocator().allocate(Size_));
 			Size = Size_;
 			Dlt = xc::ref(Deleter);
 		}
-		//”z—ñ“¯m‚ğŒğŠ·
-		void swap(my_reference my_){
+		//é…åˆ—åŒå£«ã‚’äº¤æ›
+		void swap(this_reference my_){
 			if(&my_ == this)return;
 
 			pointer tmpPtr = Ptr;
 			size_type tmpSize = Size;
-			deleter tmpDlt = Dlt;
-
 			Ptr = my_.Ptr;
 			Size = my_.Size;
-			Dlt = my_.Dlt;
-
 			my_.Ptr = tmpPtr;
 			my_.Size = tmpSize;
-			my_.Dlt = tmpDlt;
+
+			Dlt.swap(my_.Dlt);
 		}
-		//deleter‚ğæ“¾
+		//deleterã‚’å–å¾—
 		deleter get_deleter() { return Dlt; }
-		//”z—ñ‚ÍˆêØˆ—‚¹‚¸‰ğ•ú
+		//é…åˆ—ã¯ä¸€åˆ‡å‡¦ç†ã›ãšè§£æ”¾
 		pointer release() {
 			pointer AnsPtr=Ptr;
 			Ptr=0;
@@ -134,35 +119,35 @@ namespace xc{
 			return AnsPtr;
 		}
 	public:
-		//”z—ñ‚ğŠÇ—‚µ‚Ä‚¢‚é‚©
+		//é…åˆ—ã‚’ç®¡ç†ã—ã¦ã„ã‚‹ã‹
 		operator bool()const{ return Ptr!=0; }
-		//”z—ñ‚ğŠÇ—‚µ‚Ä‚¢‚é‚©
+		//é…åˆ—ã‚’ç®¡ç†ã—ã¦ã„ã‚‹ã‹
 		bool empty()const{ return Ptr == 0; }
-		//”z—ñæ“ªƒAƒhƒŒƒXæ“¾
+		//é…åˆ—å…ˆé ­ã‚¢ãƒ‰ãƒ¬ã‚¹å–å¾—
 		pointer get(){return Ptr;}
-		//”z—ñæ“ªƒAƒhƒŒƒXæ“¾(cosnt)
+		//é…åˆ—å…ˆé ­ã‚¢ãƒ‰ãƒ¬ã‚¹å–å¾—(cosnt)
 		const pointer get()const{return Ptr;}
-		//”z—ñ‚ÖƒAƒNƒZƒX
+		//é…åˆ—ã¸ã‚¢ã‚¯ã‚»ã‚¹
 		reference operator[](size_type size_){return Ptr[size_];}
-		//”z—ñ‚ÖƒAƒNƒZƒX(const)
+		//é…åˆ—ã¸ã‚¢ã‚¯ã‚»ã‚¹(const)
 		const reference operator[](size_type size_)const{return Ptr[size_];}
-		//”z—ñ‚ÖƒAƒNƒZƒX
+		//é…åˆ—ã¸ã‚¢ã‚¯ã‚»ã‚¹
 		reference at(size_type size_){ return Ptr[size_]; }
-		//”z—ñ‚ÖƒAƒNƒZƒX(const)
+		//é…åˆ—ã¸ã‚¢ã‚¯ã‚»ã‚¹(const)
 		const reference at(size_type size_)const{ return Ptr[size_]; }
-		//ƒTƒCƒY‚ğæ“¾
+		//ã‚µã‚¤ã‚ºã‚’å–å¾—
 		size_type size()const{return Size;}
-		//”z—ñ‚Éƒf[ƒ^‚ğ‹l‚ß‚é
+		//é…åˆ—ã«ãƒ‡ãƒ¼ã‚¿ã‚’è©°ã‚ã‚‹
 		void fill(unsigned char data_){
 			for(iterator itr = begin(); itr != end(); ++itr){
 				*itr = data_;
 			}
 		}
 	public:
-		//iteratoræ“¾ŠÖ”
+		//iteratorå–å¾—é–¢æ•°
 		iterator begin(){ return get(); }
 		iterator end(){ return get() + size(); }
-		//const_iteratoræ“¾ŠÖ”
+		//const_iteratorå–å¾—é–¢æ•°
 		const_iterator begin()const{ return get(); }
 		const_iterator end()const{ return get() + size(); }
 	};

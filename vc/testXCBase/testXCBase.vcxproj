@@ -75,17 +75,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\hmIto\Documents\Projects\XCBase;C:\Users\hmIto\Documents\Projects\XCBase\vc;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\Labuser\Documents\Projects\HomuraMachine\XCBase\vc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Users\Labuser\Documents\Projects\HomuraMachine\XCBase\vc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\hmIto\Documents\Projects\XCBase;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\Labuser\Documents\Projects\HomuraMachine\XCBase\vc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Users\Labuser\Documents\Projects\HomuraMachine\XCBase\vc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -182,6 +184,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="test_bitset.cpp" />
+    <ClCompile Include="test_bytes.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="test_future.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
