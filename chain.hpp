@@ -18,8 +18,8 @@ namespace xc{
 			element *prev;
 			element *next;
 		public:
-			element() :prev(0), next(0){}
-			explicit element(const T& value_) :value(value_), prev(0), next(0){}
+			element(T value_ = T()) :value(value_), prev(0), next(0){}
+			element(xc::rvalue_reference<T> rRef_) :value(rRef_), prev(0), next(0){}
 			element(const element& Elm) :value(Elm.value), prev(0), next(0){}
 			element& operator=(const element& Elm){
 				if(this != &Elm){
@@ -310,8 +310,8 @@ namespace xc{
 			T value;
 			element *next;
 		public:
-			element() :next(0){}
-			explicit element(const T& value_) :value(value_), next(0){}
+			element(T value_= T()) :value(value_), next(0){}
+			element(xc::rvalue_reference<T> rRef_) :value(rRef_), prev(0), next(0){}
 			element(const element& Elm) :value(Elm.value), next(0){}
 			element& operator=(const element& Elm){
 				if(this != &Elm){
