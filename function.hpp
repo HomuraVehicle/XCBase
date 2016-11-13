@@ -814,7 +814,7 @@ namespace xc{
 					return *this;
 				}
 				void clear(){ clear_function(); }
-				void swap(const my_type& My_){
+				void swap(my_type& My_){
 					if(this != &My_){
 						void* tmpPtr = Ptr;
 						func_invoke_type tmpFuncInvoke = FuncInvoke;

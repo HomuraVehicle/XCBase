@@ -33,7 +33,8 @@ namespace xc{
 			, Dlt(){
 			assign(Size_, Alloc);
 		}
-		bytes(pointer Ptr_, size_type Size_, const deleter&  Dlt_)
+		template<typename deleter_>
+		bytes(pointer Ptr_, size_type Size_, deleter_  Dlt_)
 			: Ptr(0)
 			, Size(0)
 			, Dlt(){
@@ -69,7 +70,8 @@ namespace xc{
 			}
 		}
 		//配列を解放し、新しく配列を保持
-		void assign(pointer ptr_, size_type size_, const deleter& dlt_){
+		template<typename deleter_>
+		void assign(pointer ptr_, size_type size_, deleter_ dlt_){
 			clear();
 
 			if(ptr_ == 0 || size_ == 0)return;
@@ -128,13 +130,13 @@ namespace xc{
 		//配列先頭アドレス取得(cosnt)
 		const pointer get()const{return Ptr;}
 		//配列へアクセス
-		reference operator[](size_type size_){return Ptr[size_];}
+		reference operator[](size_type pos_){return Ptr[pos_];}
 		//配列へアクセス(const)
-		const reference operator[](size_type size_)const{return Ptr[size_];}
+		const reference operator[](size_type pos_)const{return Ptr[pos_];}
 		//配列へアクセス
-		reference at(size_type size_){ return Ptr[size_]; }
+		reference at(size_type pos_){ return Ptr[pos_]; }
 		//配列へアクセス(const)
-		const reference at(size_type size_)const{ return Ptr[size_]; }
+		const reference at(size_type pos_)const{ return Ptr[pos_]; }
 		//サイズを取得
 		size_type size()const{return Size;}
 		//配列にデータを詰める

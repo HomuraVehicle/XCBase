@@ -68,5 +68,104 @@ public:
 		Assert::AreEqual(Ptr2, V1.begin());
 		Assert::AreEqual(Ptr1, V2.begin());
 	}
+	TEST_METHOD(deleter){
+		struct buffer{
+			bool Used;
+			unsigned char Buffer[100];
+		public:
+			struct deleter{
+				buffer* Ptr;
+			public:
+				deleter(buffer* Ptr_) :Ptr(Ptr_){}
+				void operator()(void* Ptr_, unsigned int Size_){
+					Ptr->Used = false;
+				}
+			};
+		public:
+			buffer() :Used(false){}
+		};
+
+		buffer Buf;
+
+		xc::bytes Bytes(Buf.Buffer, 100, buffer::deleter(&Buf));
+		Buf.Used = true;
+
+		Assert::IsTrue(Buf.Used);
+
+		Bytes.clear();
+
+		Assert::IsFalse(Buf.Used);
+	}
+	TEST_METHOD(deleter_move){
+		struct buffer{
+			bool Used;
+			unsigned char Buffer[100];
+		public:
+			struct deleter{
+				buffer* Ptr;
+			public:
+				deleter(buffer* Ptr_) :Ptr(Ptr_){}
+				void operator()(void* Ptr_, unsigned int Size_){
+					Ptr->Used = false;
+				}
+			};
+		public:
+			buffer() :Used(false){}
+		};
+
+		buffer Buf;
+
+		xc::bytes V1(Buf.Buffer, 100, buffer::deleter(&Buf));
+		Buf.Used = true;
+
+		Assert::IsTrue(Buf.Used);
+
+		xc::bytes V2(xc::move(V1));
+		V1.clear();
+		Assert::IsTrue(Buf.Used);
+
+		V2.clear();
+		Assert::IsFalse(Buf.Used);
+	}
+	TEST_METHOD(deleter_swap){
+		struct buffer{
+			bool Used;
+			unsigned char Buffer[100];
+		public:
+			struct deleter{
+				buffer* Ptr;
+			public:
+				deleter(buffer* Ptr_) :Ptr(Ptr_){}
+				void operator()(void* Ptr_, unsigned int Size_){
+					Ptr->Used = false;
+				}
+			};
+		public:
+			buffer() :Used(false){}
+		};
+
+		buffer Buf1;
+		buffer Buf2;
+
+		xc::bytes V1(Buf1.Buffer, 100, buffer::deleter(&Buf1));
+		Buf1.Used = true;
+		Assert::IsTrue(Buf1.Used);
+
+		xc::bytes V2(Buf2.Buffer, 100, buffer::deleter(&Buf2));
+		Buf2.Used = true;
+		Assert::IsTrue(Buf2.Used);
+
+		V1.swap(V2);
+		Assert::IsTrue(Buf1.Used);
+		Assert::IsTrue(Buf2.Used);
+
+		V1.clear();
+		Assert::IsTrue(Buf1.Used);
+		Assert::IsFalse(Buf2.Used);
+
+		V2.clear();
+		Assert::IsFalse(Buf1.Used);
+		Assert::IsFalse(Buf2.Used);
+	}
 	};
 }
