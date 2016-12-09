@@ -14,6 +14,7 @@ namespace xc{
 			chain_element_t* next;
 		public:
 			chain_element_t() :prev(0), next(0){}
+			bool owned_by_chain()const{return prev != 0;}
 		};
 		struct chain_base{
 			typedef chain_element_t element;
@@ -105,10 +106,11 @@ namespace xc{
 
 	template<typename T>
 	struct chain: private chain_base{
+	private:
+		typedef chain_base base;
 	public:
 		typedef chain<T> this_type;
 		typedef unsigned int size_type;
-		typedef chain_base base;
 		typedef chain_element element;
 	public:
 		struct const_iterator;
@@ -127,7 +129,7 @@ namespace xc{
 			}
 		public:
 			iterator& operator++(){
-				Cur = Cur->next;
+				Cur = &base::next(*Cur);
 				return *this;
 			}
 			iterator operator++(int){
@@ -136,7 +138,7 @@ namespace xc{
 				return Ans;
 			}
 			iterator& operator--(){
-				Cur = Cur->prev;
+				Cur = &base::prev(*Cur);
 				return *this;
 			}
 			iterator operator--(int){
@@ -174,7 +176,7 @@ namespace xc{
 			}
 		public:
 			const_iterator& operator++(){
-				Cur = Cur->next;
+				Cur = &base::next(*Cur);
 				return *this;
 			}
 			const_iterator operator++(int){
@@ -183,7 +185,7 @@ namespace xc{
 				return Ans;
 			}
 			const_iterator& operator--(){
-				Cur = Cur->prev;
+				Cur = &base::prev(*Cur);
 				return *this;
 			}
 			const_iterator operator--(int){
@@ -337,115 +339,97 @@ namespace xc{
 		return xc::chain<T>::const_iterator(current());
 	}
 
-	struct sorted_chain_base;
-	struct sorted_chain_element{
-		friend struct sorted_chain_base;
-	private:
-		sorted_chain_element* next;
-	public:
-		sorted_chain_element() :next(0){}
-	};
-	struct sorted_chain_base{
-		typedef sorted_chain_element element;
-		static void clear_element(element& Elem){
-			Elem.next = 0;
-		}
-		static bool insert_after_element(element& New, element& Pos){
-			if(New.next != 0)return true;
-
-			New.next = Pos.next;
-			Pos.next = &New;
-
-			return false;
-		}
-		static bool splice_range_after_element(element& BeforeFirst, element& BeforeLast, element& Pos){
-			if(BeforeFirst.next != 0)return true;
-			if(BeforeLast.next != 0)return true;
-
-			element& Next = *(Pos.next);
-
-			Pos.next = BeforeFirst.next;
-			BeforeFirst.next = BeforeLast.next;
-			BeforeLast.next = &Next;
-
-			return false;
-		}
-		static bool splice_after_element(element& ElemBefore, element& Pos){
-			if(ElemBefore.next != 0)return true;
-
-			element& Elem = *(ElemBefore.next);
-			element& Next = *(Pos.next);
-
-			Pos.next = ElemBefore.next;
-			ElemBefore.next = Elem.next;
-			Elem.next = &Next;
-
-			return false;
-		}
-		static bool erase_after_element(element& Pos){
-			if(Pos.next == 0)return true;
-
-			element& Next = *(Pos.next);
-
-			Pos.next = Next.next;
-			clear_element(Next);
-
-			return false;
-		}
-		static unsigned int erase_range_after_element(element& BeforeFirst, element& BeforeLast){
-			if(BeforeFirst.next != 0)return true;
-			if(BeforeLast.next != 0)return true;
-
-			element* Ptr = BeforeFirst.next;
-			BeforeFirst.next = BeforeLast.next;
-
-			unsigned int Cnt = 0;
-			while(true){
-				element* Cur = Ptr;
-				Ptr = Ptr->next;
-				clear_element(*Cur);
-				++Cnt;
-				if(Cur == &BeforeLast)break;
+	namespace{
+		struct forward_chain_base;
+		struct forward_chain_element_t{
+			friend struct forward_chain_base;
+		private:
+			forward_chain_element_t* next;
+		public:
+			forward_chain_element_t() :next(0){}
+		};
+		struct forward_chain_base{
+			typedef forward_chain_element_t element;
+			static void clear_element(element& Elem){
+				Elem.next = 0;
 			}
+			static bool insert_after_element(element& New, element& Pos){
+				if(New.next != 0)return true;
 
-			return Cnt;
-		}
-	};
+				New.next = Pos.next;
+				Pos.next = &New;
+
+				return false;
+			}
+			static bool splice_range_after_element(element& BeforeFirst, element& BeforeLast, element& Pos){
+				if(BeforeFirst.next != 0)return true;
+				if(BeforeLast.next != 0)return true;
+
+				element& Next = *(Pos.next);
+
+				Pos.next = BeforeFirst.next;
+				BeforeFirst.next = BeforeLast.next;
+				BeforeLast.next = &Next;
+
+				return false;
+			}
+			static bool splice_after_element(element& ElemBefore, element& Pos){
+				if(ElemBefore.next != 0)return true;
+
+				element& Elem = *(ElemBefore.next);
+				element& Next = *(Pos.next);
+
+				Pos.next = ElemBefore.next;
+				ElemBefore.next = Elem.next;
+				Elem.next = &Next;
+
+				return false;
+			}
+			static bool erase_after_element(element& Pos){
+				if(Pos.next == 0)return true;
+
+				element& Next = *(Pos.next);
+
+				Pos.next = Next.next;
+				clear_element(Next);
+
+				return false;
+			}
+			static unsigned int erase_range_after_element(element& BeforeFirst, element& BeforeLast){
+				if(BeforeFirst.next != 0)return true;
+				if(BeforeLast.next != 0)return true;
+
+				element* Ptr = BeforeFirst.next;
+				BeforeFirst.next = BeforeLast.next;
+
+				unsigned int Cnt = 0;
+				while(true){
+					element* Cur = Ptr;
+					Ptr = Ptr->next;
+					clear_element(*Cur);
+					++Cnt;
+					if(Cur == &BeforeLast)break;
+				}
+
+				return Cnt;
+			}
+			static void selfing(element& Elem){
+				Elem.next = &Elem;
+			}
+			static element& next(element& Elem){ return *(Elem.next); }
+		};
+	}
+	typedef forward_chain_element_t sorted_chain_element;
 
 	template<typename T, typename compare_ = std::less<T>>
-	struct sorted_chain{
+	struct sorted_chain: public forward_chain_base{
+	private:
+		typedef forward_chain_base base;
 	public:
 		typedef chain<T> this_type;
 		typedef unsigned int size_type;
+		typedef sorted_chain_element element;
 		typedef compare_ compare;
-		typedef sorted_chain_base base;
-	public:
-		struct element{
-			friend struct sorted_chain<T, compare>;
-		private:
-			T value;
-			element *next;
-		public:
-			element(T value_= T()) :value(value_), next(0){}
-			element(xc::rvalue_reference<T> rRef_) :value(rRef_), prev(0), next(0){}
-			element(const element& Elm) :value(Elm.value), next(0){}
-			element& operator=(const element& Elm){
-				if(this != &Elm){
-					value = Elm.value;
-				}
-				return *this;
-			}
-		public:
-			operator bool()const{ return next == 0; }
-			T& operator*(){ return value; }
-			const T& operator*()const{ return value; }
-			T* operator->(){ return &value; }
-			const T* operator->()const{ return &value; }
-		public:
-			static void connect(element& Prev, element& Next){
-				Prev.next = &Next;
-			}
-		};
 	public:
 		struct const_iterator;
 		struct iterator :public std::iterator<std::forward_iterator_tag, T>{
@@ -463,7 +447,7 @@ namespace xc{
 			}
 		public:
 			iterator& operator++(){
-				Cur = Cur->next;
+				Cur = &base::next(*Cur);
 				return *this;
 			}
 			iterator operator++(int){
@@ -501,7 +485,7 @@ namespace xc{
 			}
 		public:
 			const_iterator& operator++(){
-				Cur = Cur->next;
+				Cur = &base::next(*Cur);
 				return *this;
 			}
 			const_iterator operator++(int){
@@ -525,37 +509,32 @@ namespace xc{
 		compare Comp;
 	public:
 		sorted_chain(){
-			Sentinel.next = &Sentinel;
+			base::selfing(Sentinel);
 		}
 		sorted_chain(xc::rvalue_reference<this_type>& rref){
 			if(rref.ref.empty()){
-				Size = 0;
-				Sentinel.next = &Sentinel;
+				base::selfing(Sentinel);
 				return;
 			}
 
-			Size = rref.ref.Size;
-			rref.ref.Size = 0;
 			element* Ptr = rref.ref.Sentinel;
-			while(Ptr->next != &(rref.ref.Sentinel)){
-				Ptr = Ptr->next;
+			while(&base::next(*Ptr) != &(rref.ref.Sentinel)){
+				Ptr = &base::next(*Ptr);
 			}
 
-			base::splice_range_after_element(rref.ref.Sentinel, Ptr, Sentinel);
+			base::splice_range_after_element(rref.ref.Sentinel, *Ptr, Sentinel);
 		}
 		this_type& operator=(xc::rvalue_reference<this_type>& rref){
 			if(this != &(rref.ref)){
 				clear();
 
 				if(!rref.ref.empty()){
-					Size = rref.ref.Size;
-					rref.ref.Size = 0;
 					element* Ptr = rref.ref.Sentinel;
-					while(Ptr->next != &(rref.ref.Sentinel)){
-						Ptr = Ptr->next;
+					while(&base::next(*Ptr) != &(rref.ref.Sentinel)){
+						Ptr = &base::next(*Ptr);
 					}
 
-					base::splice_range_after_element(rref.ref.Sentinel, Ptr, Sentinel);
+					base::splice_range_after_element(rref.ref.Sentinel, *Ptr, Sentinel);
 				}
 			}
 
@@ -565,16 +544,16 @@ namespace xc{
 		sorted_chain(const this_type&){}
 		this_type& operator=(const this_type&){}
 	public:
-		iterator begin(){ return iterator(Sentinel.next); }
+		iterator begin(){ return iterator(&base::next(Snetinel)); }
 		iterator end(){ return iterator(&Sentinel); }
-		const_iterator cbegin()const{ return const_iterator(Sentinel.next); }
+		const_iterator cbegin()const{ return const_iterator(&base::next(Snetinel)); }
 		const_iterator cend()const{ return const_iterator(&Sentinel); }
 		const_iterator begin()const{ return cbegin(); }
 		const_iterator end()const{ return cend(); }
 	public:
-		bool empty(){ return Sentinel.next == &Sentinel; }
-		T& next(){ return *(*(Sentinel.next)); }
-		const T& next()const{ return *(*(Sentinel.next)); }
+		bool empty(){ return &base::next(Sentinel) == &Sentinel; }
+		T& next(){ return static_cast<T&>(base::next(Sentinel)); }
+		const T& next()const{ return static_cast<const T&>(base::next(Sentinel)); }
 		void push(element& Elem){
 			element* p1 = Sentinel.next;
 			element* p2 = &Sentinel;
@@ -598,28 +577,24 @@ namespace xc{
 			base::erase_after_element(Sentinel);
 		}
 		void swap(this_type& other){
-			std::swap(Sentinel.next, other.Sentinel.next);
+			std::swap(Sentinel, other.Sentinel);
 		}
 		void clear(){
-			element* p1 = Sentinel.next;
+			element* p1 = &base::next(Sentinel);
 			element* p2 = &Sentinel;
 			while(true){
 				//check with p1 == end?
-				if(p1 == &Sentinel){
-					Sentinel.next = &Sentinel;
-					return;
-				}
-				p2 = p1->next;
-				p1->next = 0;
+				if(p1 == &Sentinel)break;
+				p2 = &base::next(*p1);
+				base::clear_element(*p1);
 
 				//check with p2 == end?
-				if(p2 == &Sentinel){
-					Sentinel.next = &Sentinel;
-					return;
-				}
-				p1 = p2->next;
-				p2->next = 0;
+				if(p2 == &Sentinel)break;
+				p1 = &base::next(*p2);
+				base::clear_element(*p2);
 			}
+			base::selfing(Sentinel);
+			return;
 		}
 	};
 	template<typename T, typename compare_>
