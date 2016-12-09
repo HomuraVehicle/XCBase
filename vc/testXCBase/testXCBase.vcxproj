@@ -75,7 +75,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\Labuser\Documents\Projects\HomuraMachine\XCBase\vc;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\hmIto\Documents\Projects\HomuraMachine\XCBase\vc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -188,6 +188,7 @@
       <SubType>
       </SubType>
     </ClCompile>
+    <ClCompile Include="test_chain.cpp" />
     <ClCompile Include="test_future.cpp" />
     <ClCompile Include="test_shared_bytes.cpp">
       <SubType>
