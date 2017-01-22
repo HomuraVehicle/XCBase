@@ -249,8 +249,8 @@ namespace xc{
 		const_iterator begin()const{ return cbegin(); }
 		const_iterator end()const{ return cend(); }
 	public:
-		bool empty(){ return Size == 0; }
-		size_type size(){ return Size; }
+		bool empty()const{ return Size == 0; }
+		size_type size()const{ return Size; }
 		T& front(){ return static_cast<T&>(base::next(Sentinel)); }
 		T& back(){ return static_cast<T&>(base::prev(Sentinel)); }
 		const T& front()const{ return static_cast<const T&>(base::next(Sentinel)); }
@@ -561,7 +561,7 @@ namespace xc{
 		const_iterator begin()const{ return cbegin(); }
 		const_iterator end()const{ return cend(); }
 	public:
-		bool empty(){ return begin() == end(); }
+		bool empty()const{ return begin() == end(); }
 		T& front(){ return static_cast<T&>(base::next(Sentinel)); }
 		const T& front()const{ return static_cast<const T&>(base::next(Sentinel)); }
 		void push_front(T& Elem){
@@ -749,7 +749,7 @@ namespace xc{
 		const_iterator begin()const{ return cbegin(); }
 		const_iterator end()const{ return cend(); }
 	public:
-		bool empty(){ return &base::next(Sentinel) == &Sentinel; }
+		bool empty()const{ return &base::next(Sentinel) == &Sentinel; }
 		T& next(){ return static_cast<T&>(base::next(Sentinel)); }
 		const T& next()const{ return static_cast<const T&>(base::next(Sentinel)); }
 		void push(element& Elem){
