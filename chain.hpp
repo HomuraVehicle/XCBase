@@ -112,6 +112,8 @@ namespace xc{
 	public:
 		typedef chain<T> this_type;
 		typedef unsigned int size_type;
+		typedef T value_type;
+	private:
 		typedef chain_element element;
 	public:
 		struct const_iterator;
@@ -277,13 +279,13 @@ namespace xc{
 			++Size;
 			base::insert_element(Elem, *const_cast<element*>(pos.current()));
 
-			return iterator(Elem);
+			return iterator(&Elem);
 		}
 		iterator erase(const_iterator pos){
 			if(pos == end())return end();
 
-			element& Curr = *const_cast<element*>pos.current();
-			element& Next = *(Curr.next);
+			element& Curr = *const_cast<element*>(pos.current());
+			element& Next = base::next(Curr);
 
 			--Size;
 			base::erase_element(Curr);
@@ -294,7 +296,7 @@ namespace xc{
 			if(first == end())return end();
 
 			Size -= base::erase_range_element(*const_cast<element*>(first.current()), *const_cast<element*>(last.current()));
-			return iterator(last.current());
+			return iterator(const_cast<element*>(last.current()));
 		}
 		iterator find_element(const T& Elem){
 			iterator Itr = begin();
