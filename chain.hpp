@@ -34,9 +34,6 @@ namespace xc{
 				return false;
 			}
 			static bool splice_range_element(element& First, element& Last, element& Pos){
-				if(First.next != 0 || First.prev != 0)return true;
-				if(Last.next != 0 || Last.prev != 0)return true;
-
 				element& Before = *(Pos.prev);
 
 				Last.prev->next = &Pos;
@@ -51,8 +48,6 @@ namespace xc{
 				return false;
 			}
 			static bool splice_element(element& Elem, element& Pos){
-				if(Elem.next != 0 || Elem.prev != 0)return true;
-
 				element& Before = *(Pos.prev);
 
 				Elem.next->prev = Elem.prev;
@@ -102,8 +97,14 @@ namespace xc{
 			static element& next(element& Elem){ return *(Elem.next); }
 		};
 	}
+
 	typedef chain_element_t chain_element;
 
+	/*!@brief 要素に制約を与えることで、動的メモリを使わずに双方向リストライクに使えるコンテナ。
+	@detail 通常、コンテナは動的メモリを使用する必要があるが、登録できる要素の型に以下の制約を課すことで、動的メモリ確保を不要とした双方向リストとして使えるコンテナ。
+	- 要素はchain_elementタイプを継承した型に限られる。
+	- chainに登録されるのは、要素のコピーではなく参照。そのため、chainに登録中の要素はchainから取り除かれない限り破棄されてはいけない。
+	コンテナのインターフェースは標準ライブラリの双方向リストコンテナ、std::listに準ずる。*/
 	template<typename T>
 	struct chain: private chain_base{
 	private:
@@ -281,7 +282,7 @@ namespace xc{
 		iterator erase(const_iterator pos){
 			if(pos == end())return end();
 
-			element& Curr = *pos.current();
+			element& Curr = *const_cast<element*>pos.current();
 			element& Next = *(Curr.next);
 
 			--Size;
@@ -295,7 +296,7 @@ namespace xc{
 			Size -= base::erase_range_element(*const_cast<element*>(first.current()), *const_cast<element*>(last.current()));
 			return iterator(last.current());
 		}
-		iterator find(const T& Elem){
+		iterator find_element(const T& Elem){
 			iterator Itr = begin();
 			for(;Itr != end(); ++Itr){
 				if(Itr.current() == &Elem)break;
@@ -362,9 +363,6 @@ namespace xc{
 				return false;
 			}
 			static bool splice_range_after_element(element& BeforeFirst, element& BeforeLast, element& Pos){
-				if(BeforeFirst.next != 0)return true;
-				if(BeforeLast.next != 0)return true;
-
 				element& Next = *(Pos.next);
 
 				Pos.next = BeforeFirst.next;
@@ -373,45 +371,46 @@ namespace xc{
 
 				return false;
 			}
-			static bool splice_after_element(element& ElemBefore, element& Pos){
-				if(ElemBefore.next != 0)return true;
-
-				element& Elem = *(ElemBefore.next);
+			static bool splice_after_element(element& BeforeElem, element& Pos){
+				element& Elem = *(BeforeElem.next);
 				element& Next = *(Pos.next);
 
-				Pos.next = ElemBefore.next;
-				ElemBefore.next = Elem.next;
+				//== before ==
+				//BeforeElem -> Elem -> (AfterElem)
+				//Pos -> Next
+				Pos.next = &Elem;
+				BeforeElem.next = Elem.next;
 				Elem.next = &Next;
+				//== after ==
+				//BeforeElem -> (AfterElem)
+				//Pos -> Elem -> Next
 
 				return false;
 			}
-			static bool erase_after_element(element& Pos){
-				if(Pos.next == 0)return true;
+			static element* erase_after_element(element& Pos){
+				if(Pos.next == 0)return 0;
 
 				element& Next = *(Pos.next);
 
 				Pos.next = Next.next;
 				clear_element(Next);
 
-				return false;
+				return Pos.next;
 			}
-			static unsigned int erase_range_after_element(element& BeforeFirst, element& BeforeLast){
-				if(BeforeFirst.next != 0)return true;
-				if(BeforeLast.next != 0)return true;
+			static element* erase_range_after_element(element& BeforeFirst, element& Last){
+				if(BeforeFirst.next != 0)return 0;
+				if(Last.next != 0)return 0;
 
 				element* Ptr = BeforeFirst.next;
-				BeforeFirst.next = BeforeLast.next;
+				BeforeFirst.next = &Last;
 
-				unsigned int Cnt = 0;
-				while(true){
+				while(Ptr!=&Last){
 					element* Cur = Ptr;
 					Ptr = Ptr->next;
 					clear_element(*Cur);
-					++Cnt;
-					if(Cur == &BeforeLast)break;
 				}
 
-				return Cnt;
+				return &Last;
 			}
 			static void selfing(element& Elem){
 				Elem.next = &Elem;
@@ -419,8 +418,205 @@ namespace xc{
 			static element& next(element& Elem){ return *(Elem.next); }
 		};
 	}
-	typedef forward_chain_element_t sorted_chain_element;
+	
+	typedef forward_chain_element_t forward_chain_element;
 
+	/*!@brief 要素に制約を与えることで、動的メモリを使わずに単方向リストライクに使えるコンテナ。
+	@detail chainと同様の制約を要素に与えることで、動的メモリ確保を不要とした単方向リストとして使えるコンテナ。
+	コンテナのインターフェースは標準ライブラリの単方向リストコンテナ、std::foward_listに準ずる。*/
+	template<typename T>
+	struct forward_chain : private forward_chain_base{
+	private:
+		typedef forward_chain_base base;
+	public:
+		typedef forward_chain<T> this_type;
+		typedef unsigned int size_type;
+		typedef forward_chain_element element;
+	public:
+		struct const_iterator;
+		struct iterator :public std::iterator<std::bidirectional_iterator_tag, T>{
+		private:
+			element* Cur;
+		public:
+			iterator() :Cur(0){}
+			explicit iterator(element* Cur_) :Cur(Cur_){}
+			iterator(const iterator& Other) :Cur(Other.Cur){}
+			iterator& operator=(const iterator& Other){
+				if(this != &Other){
+					Cur = Other.Cur;
+				}
+				return *this;
+			}
+		public:
+			iterator& operator++(){
+				Cur = &base::next(*Cur);
+				return *this;
+			}
+			iterator operator++(int){
+				iterator Ans(*this);
+				this->operator++();
+				return Ans;
+			}
+			T& operator*(){ return *static_cast<T*>(Cur); }
+			const T& operator*()const{ return *static_cast<const T*>(Cur); }
+			T* operator->(){ return static_cast<T*>(Cur); }
+			const T* operator->()const{ return static_cast<const T*>(Cur); }
+			operator const_iterator();
+			friend bool operator==(const iterator& Itr1, const iterator& Itr2){
+				return Itr1.Cur == Itr2.Cur;
+			}
+			friend bool operator!=(const iterator& Itr1, const iterator& Itr2){
+				return Itr1.Cur != Itr2.Cur;
+			}
+		public:
+			element* current()const{ return Cur; }
+		};
+		struct const_iterator :public std::iterator<std::bidirectional_iterator_tag, const T>{
+		private:
+			const element* Cur;
+		public:
+			const_iterator() :Cur(0){}
+			explicit const_iterator(const element* Cur_) :Cur(Cur_){}
+			const_iterator(const iterator& Other) :Cur(Other.current()){}
+			const_iterator(const const_iterator& Other) :Cur(Other.Cur){}
+			const_iterator& operator=(const const_iterator& Other){
+				if(this != &Other){
+					Cur = Other.Cur;
+				}
+				return *this;
+			}
+		public:
+			const_iterator& operator++(){
+				Cur = &base::next(*Cur);
+				return *this;
+			}
+			const_iterator operator++(int){
+				iterator Ans(*this);
+				this->operator++();
+				return Ans;
+			}
+			const T& operator*()const{ return *static_cast<const T*>(Cur); }
+			const T* operator->()const{ return static_cast<const T*>(Cur); }
+			friend bool operator==(const const_iterator& Itr1, const const_iterator& Itr2){
+				return Itr1.Cur == Itr2.Cur;
+			}
+			friend bool operator!=(const const_iterator& Itr1, const const_iterator& Itr2){
+				return Itr1.Cur != Itr2.Cur;
+			}
+		public:
+			const element* current()const{ return Cur; }
+		};
+	private:
+		element BeforeBegin;
+		element Sentinel;
+	public:
+		forward_chain(){
+			base::selfing(Sentinel);
+			base::clear_element(BeforeBegin);
+			base::insert_after_element(BeforeBegin, Sentinel);
+		}
+		forward_chain(rvalue_reference<this_type>& rref){
+			base::selfing(Sentinel);
+			base::clear_element(BeforeBegin);
+			base::insert_after_element(BeforeBegin, Sentinel);
+
+			if(!rref.ref.empty()){
+				element* Ptr = rref.ref.BeforeBegin;
+				while(&base::next(*Ptr) != &(rref.ref.Sentinel)){
+					Ptr = &base::next(*Ptr);
+				}
+
+				base::splice_range_after_element(rref.ref.BeforeBegin, *Ptr, BeforeBegin);
+			}
+		}
+		this_type& operator=(rvalue_reference<this_type>& rref){
+			if(this != &(rref.ref)){
+				clear();
+
+				if(!rref.ref.empty()){
+					element* Ptr = rref.ref.BeforeBegin;
+					while(&base::next(*Ptr) != &(rref.ref.Sentinel)){
+						Ptr = &base::next(*Ptr);
+					}
+
+					base::splice_range_after_element(rref.ref.BeforeBegin, *Ptr, BeforeBegin);
+				}
+			}
+
+			return *this;
+		}
+	private:
+		forward_chain(const this_type&){}
+		this_type& operator=(const this_type&){}
+	public:
+		iterator before_begin(){ return iterator(&BeforeBegin); }
+		iterator begin(){ return iterator(&base::next(BeforeBegin)); }
+		iterator end(){ return iterator(&Sentinel); }
+		const_iterator before_cbegin(){ return iterator(&BeforeBegin); }
+		const_iterator cbegin()const{ return const_iterator(&base::next(BeforeBegin)); }
+		const_iterator cend()const{ return const_iterator(&Sentinel); }
+		const_iterator before_begin()const{ return before_cbegin(); }
+		const_iterator begin()const{ return cbegin(); }
+		const_iterator end()const{ return cend(); }
+	public:
+		bool empty(){ return begin() == end(); }
+		T& front(){ return static_cast<T&>(base::next(Sentinel)); }
+		const T& front()const{ return static_cast<const T&>(base::next(Sentinel)); }
+		void push_front(T& Elem){
+			base::insert_after_element(Elem, BeforeBegin);
+		}
+		void pop_front(){
+			base::erase_after_element(BeforeBegin);
+		}
+		iterator insert_after(const_iterator pos, T& Elem){
+			base::insert_after_element(Elem, *const_cast<element*>(pos.current()));
+
+			return iterator(Elem);
+		}
+		iterator erase_after(const_iterator pos){
+			if(pos == end())return end();
+			return iterator(base::erase_after_element(*const_cast<element*>(pos.current())));
+		}
+		iterator erase_after(const_iterator before_first, const_iterator last){
+			if(first == end())return end();
+			return iterator(base::erase_range_after_element(*const_cast<element*>(before_first.current()), *const_cast<element*>(last.current())));
+		}
+		iterator find_element(const T& Elem){
+			iterator Itr = begin();
+			for(; Itr != end(); ++Itr){
+				if(Itr.current() == &Elem)break;
+			}
+			return Itr;
+		}
+		void swap(this_type& other){
+			std::swap(Sentinel, other.Sentinel);
+			std::swap(BeforeBegin, other.BeforeBegin);
+		}
+		void clear(){
+			erase_after(before_begin(), end());
+		}
+		void splice_after(const_iterator pos, this_type& other){
+			if(other.empty())return;
+
+			base::erase_range_after_element(other.BeforeBegin, other.Sentinel, *const_cast<element*>(pos.current()));
+		}
+		void splice_after(const_iterator pos, this_type& other, const_iterator before_elem){
+			base::splice_after_element(*const_cast<element*>(before_elem.current()), *const_cast<element*>(pos.current()));
+		}
+		void splice_after(const_iterator pos, this_type& other, const_iterator before_first, const_iterator last){
+			base::erase_range_after_element(*const_cast<element*>(before_first.current()), *const_cast<element*>(last.current()), *const_cast<element*>(pos.current()));
+		}
+	};
+	template<typename T>
+	forward_chain<T>::iterator::operator typename xc::forward_chain<T>::const_iterator(){
+		return xc::forward_chain<T>::const_iterator(current());
+	}
+	
+	typedef forward_chain_element_t sorted_chain_element;
+	/*!@brief 要素に制約を与えることで、動的メモリを使わずに優先順位付きキューライク使えるコンテナ。
+	@detail chainと同様の制約を要素に与えることで、動的メモリ確保を不要とした優先順位付きキューとして使えるコンテナ。
+	コンテナのインターフェースは標準ライブラリの優先順位付きキュー、std::priority_queueに準ずる。
+	ただし、priority_queueと比較して、compareの作用が逆となっている。*/
 	template<typename T, typename compare_ = std::less<T>>
 	struct sorted_chain: public forward_chain_base{
 	private:

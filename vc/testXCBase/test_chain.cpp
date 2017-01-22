@@ -14,6 +14,8 @@ namespace xc{
 public:
 	TEST_METHOD(construct){
 		xc::chain<elem> Chain;
+		xc::forward_chain<elem> FChain;
+		xc::sorted_chain<elem> SChain;
 		Assert::IsTrue(Chain.empty());
 		Assert::AreEqual(0u,Chain.size());
 
