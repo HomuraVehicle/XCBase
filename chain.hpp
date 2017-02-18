@@ -95,6 +95,8 @@ namespace xc{
 			}
 			static element& prev(element& Elem){ return *(Elem.prev); }
 			static element& next(element& Elem){ return *(Elem.next); }
+			static const element& prev(const element& Elem){ return *(Elem.prev); }
+			static const element& next(const element& Elem){ return *(Elem.next); }
 		};
 	}
 
@@ -418,6 +420,7 @@ namespace xc{
 				Elem.next = &Elem;
 			}
 			static element& next(element& Elem){ return *(Elem.next); }
+			static const element& next(const element& Elem){ return *(Elem.next); }
 		};
 	}
 	
@@ -580,6 +583,8 @@ namespace xc{
 			return iterator(base::erase_after_element(*const_cast<element*>(pos.current())));
 		}
 		iterator erase_after(const_iterator before_first, const_iterator last){
+			const_iterator first = before_first;
+			++first;
 			if(first == end())return end();
 			return iterator(base::erase_range_after_element(*const_cast<element*>(before_first.current()), *const_cast<element*>(last.current())));
 		}
@@ -653,10 +658,10 @@ namespace xc{
 				this->operator++();
 				return Ans;
 			}
-			T& operator*(){ return Cur->operator*(); }
-			const T& operator*()const{ return Cur->operator*(); }
-			T* operator->(){ return Cur->operator->(); }
-			const T* operator->()const{ return Cur->operator->(); }
+			T& operator*(){ return *static_cast<T*>(Cur); }
+			const T& operator*()const{ return *static_cast<const T*>(Cur); }
+			T* operator->(){ return static_cast<T*>(Cur); }
+			const T* operator->()const{ return static_cast<const T*>(Cur); }
 			operator const_iterator();
 			friend bool operator==(const iterator& Itr1, const iterator& Itr2){
 				return Itr1.Cur == Itr2.Cur;
@@ -691,8 +696,8 @@ namespace xc{
 				this->operator++();
 				return Ans;
 			}
-			const T& operator*()const{ return Cur->operator*(); }
-			const T* operator->()const{ return Cur->operator->(); }
+			const T& operator*()const{ return *static_cast<const T*>(Cur); }
+			const T* operator->()const{ return static_cast<const T*>(Cur); }
 			friend bool operator==(const const_iterator& Itr1, const const_iterator& Itr2){
 				return Itr1.Cur == Itr2.Cur;
 			}
@@ -742,9 +747,9 @@ namespace xc{
 		sorted_chain(const this_type&){}
 		this_type& operator=(const this_type&){}
 	public:
-		iterator begin(){ return iterator(&base::next(Snetinel)); }
+		iterator begin(){ return iterator(&base::next(Sentinel)); }
 		iterator end(){ return iterator(&Sentinel); }
-		const_iterator cbegin()const{ return const_iterator(&base::next(Snetinel)); }
+		const_iterator cbegin()const{ return const_iterator(&base::next(Sentinel)); }
 		const_iterator cend()const{ return const_iterator(&Sentinel); }
 		const_iterator begin()const{ return cbegin(); }
 		const_iterator end()const{ return cend(); }
