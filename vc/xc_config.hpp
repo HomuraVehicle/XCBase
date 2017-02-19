@@ -1,5 +1,5 @@
-//�Ǝ�allocator���g�������ꍇ�́A�ȉ��̃}�N����L���ɂ���ƁA
-//local_allocator.hpp������xc::local_allocator�𗘗p���Ă����悤�ɂȂ�
+//独自allocatorを使いたい場合は、以下のマクロを有効にすると、
+//local_allocator.hpp内部のxc::local_allocatorを利用してくれるようになる
 //#define XC_LOCAL_ALLOCATOR
 #if defined(_MSC_VER) || defined(__clang__ )
 #	pragma message("###############################")
