@@ -54,11 +54,11 @@ namespace xc{
 			return *this;
 		}
 		~bytes(){ clear();}
-	private://ƒRƒs[‚Í‹Ö~
+	private://ã‚³ãƒ”ãƒ¼ã¯ç¦æ­¢
 		bytes(const this_type& my_);
 		this_type& operator=(const this_type& my_);
 	public:
-		//”z—ñ‚ğ‰ğ•ú
+		//é…åˆ—ã‚’è§£æ”¾
 		void clear(){
 			if(Ptr==0)return;
 
@@ -69,7 +69,7 @@ namespace xc{
 				Size = 0;
 			}
 		}
-		//”z—ñ‚ğ‰ğ•ú‚µAV‚µ‚­”z—ñ‚ğ•Û
+		//é…åˆ—ã‚’è§£æ”¾ã—ã€æ–°ã—ãé…åˆ—ã‚’ä¿æŒ
 		template<typename deleter_>
 		void assign(pointer Ptr_, size_type Size_, deleter_ Dlt_){
 			clear();
@@ -80,7 +80,7 @@ namespace xc{
 			Size = Size_;
 			Dlt = Dlt_;
 		}
-		//”z—ñ‚ğŠJ•ú‚µAV‚µ‚­”z—ñ‚ğ•Û
+		//é…åˆ—ã‚’é–‹æ”¾ã—ã€æ–°ã—ãé…åˆ—ã‚’ä¿æŒ
 		template<typename alloc = default_allocator>
 		void assign(size_type Size_, alloc Alloc=alloc()){
 			clear();
@@ -97,7 +97,7 @@ namespace xc{
 			Size = Size_;
 			Dlt = xc::ref(Deleter);
 		}
-		//”z—ñ“¯m‚ğŒğŠ·
+		//é…åˆ—åŒå£«ã‚’äº¤æ›
 		void swap(this_type& my_){
 			if(&my_ == this)return;
 
@@ -110,9 +110,9 @@ namespace xc{
 
 			Dlt.swap(my_.Dlt);
 		}
-		//deleter‚ğæ“¾
+		//deleterã‚’å–å¾—
 		deleter get_deleter() { return Dlt; }
-		//”z—ñ‚ÍˆêØˆ—‚¹‚¸‰ğ•ú
+		//é…åˆ—ã¯ä¸€åˆ‡å‡¦ç†ã›ãšè§£æ”¾
 		pointer release() {
 			pointer AnsPtr=Ptr;
 			Ptr=0;
@@ -121,35 +121,35 @@ namespace xc{
 			return AnsPtr;
 		}
 	public:
-		//”z—ñ‚ğŠÇ—‚µ‚Ä‚¢‚é‚©
+		//é…åˆ—ã‚’ç®¡ç†ã—ã¦ã„ã‚‹ã‹
 		operator bool()const{ return Ptr!=0; }
-		//”z—ñ‚ğŠÇ—‚µ‚Ä‚¢‚é‚©
+		//é…åˆ—ã‚’ç®¡ç†ã—ã¦ã„ã‚‹ã‹
 		bool empty()const{ return Ptr == 0; }
-		//”z—ñæ“ªƒAƒhƒŒƒXæ“¾
+		//é…åˆ—å…ˆé ­ã‚¢ãƒ‰ãƒ¬ã‚¹å–å¾—
 		pointer get(){return Ptr;}
-		//”z—ñæ“ªƒAƒhƒŒƒXæ“¾(cosnt)
+		//é…åˆ—å…ˆé ­ã‚¢ãƒ‰ãƒ¬ã‚¹å–å¾—(cosnt)
 		const pointer get()const{return Ptr;}
-		//”z—ñ‚ÖƒAƒNƒZƒX
+		//é…åˆ—ã¸ã‚¢ã‚¯ã‚»ã‚¹
 		reference operator[](size_type pos_){return Ptr[pos_];}
-		//”z—ñ‚ÖƒAƒNƒZƒX(const)
+		//é…åˆ—ã¸ã‚¢ã‚¯ã‚»ã‚¹(const)
 		const reference operator[](size_type pos_)const{return Ptr[pos_];}
-		//”z—ñ‚ÖƒAƒNƒZƒX
+		//é…åˆ—ã¸ã‚¢ã‚¯ã‚»ã‚¹
 		reference at(size_type pos_){ return Ptr[pos_]; }
-		//”z—ñ‚ÖƒAƒNƒZƒX(const)
+		//é…åˆ—ã¸ã‚¢ã‚¯ã‚»ã‚¹(const)
 		const reference at(size_type pos_)const{ return Ptr[pos_]; }
-		//ƒTƒCƒY‚ğæ“¾
+		//ã‚µã‚¤ã‚ºã‚’å–å¾—
 		size_type size()const{return Size;}
-		//”z—ñ‚Éƒf[ƒ^‚ğ‹l‚ß‚é
+		//é…åˆ—ã«ãƒ‡ãƒ¼ã‚¿ã‚’è©°ã‚ã‚‹
 		void fill(unsigned char data_){
 			for(iterator itr = begin(); itr != end(); ++itr){
 				*itr = data_;
 			}
 		}
 	public:
-		//iteratoræ“¾ŠÖ”
+		//iteratorå–å¾—é–¢æ•°
 		iterator begin(){ return get(); }
 		iterator end(){ return get() + size(); }
-		//const_iteratoræ“¾ŠÖ”
+		//const_iteratorå–å¾—é–¢æ•°
 		const_iterator begin()const{ return get(); }
 		const_iterator end()const{ return get() + size(); }
 	};

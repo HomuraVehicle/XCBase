@@ -102,11 +102,11 @@ namespace xc{
 
 	typedef chain_element_t chain_element;
 
-	/*!@brief �v�f�ɐ����^���邱�ƂŁA���I���������g�킸�ɑo�������X�g���C�N�Ɏg����R���e�i�B
-	@detail �ʏ�A�R���e�i�͓��I���������g�p����K�v�����邪�A�o�^�ł���v�f�̌^�Ɉȉ��̐�����ۂ����ƂŁA���I�������m�ۂ�s�v�Ƃ����o�������X�g�Ƃ��Ďg����R���e�i�B
-	- �v�f��chain_element�^�C�v���p�������^�Ɍ�����B
-	- chain�ɓo�^�����̂́A�v�f�̃R�s�[�ł͂Ȃ��Q�ƁB���̂��߁Achain�ɓo�^���̗v�f��chain�����菜����Ȃ�����j������Ă͂����Ȃ��B
-	�R���e�i�̃C���^�[�t�F�[�X�͕W�����C�u�����̑o�������X�g�R���e�i�Astd::list�ɏ�����B*/
+	/*!@brief 要素に制約を与えることで、動的メモリを使わずに双方向リストライクに使えるコンテナ。
+	@detail 通常、コンテナは動的メモリを使用する必要があるが、登録できる要素の型に以下の制約を課すことで、動的メモリ確保を不要とした双方向リストとして使えるコンテナ。
+	- 要素はchain_elementタイプを継承した型に限られる。
+	- chainに登録されるのは、要素のコピーではなく参照。そのため、chainに登録中の要素はchainから取り除かれない限り破棄されてはいけない。
+	コンテナのインターフェースは標準ライブラリの双方向リストコンテナ、std::listに準ずる。*/
 	template<typename T>
 	struct chain: private chain_base{
 	private:
@@ -426,9 +426,9 @@ namespace xc{
 	
 	typedef forward_chain_element_t forward_chain_element;
 
-	/*!@brief �v�f�ɐ����^���邱�ƂŁA���I���������g�킸�ɒP�������X�g���C�N�Ɏg����R���e�i�B
-	@detail chain�Ɠ��l�̐����v�f�ɗ^���邱�ƂŁA���I�������m�ۂ�s�v�Ƃ����P�������X�g�Ƃ��Ďg����R���e�i�B
-	�R���e�i�̃C���^�[�t�F�[�X�͕W�����C�u�����̒P�������X�g�R���e�i�Astd::foward_list�ɏ�����B*/
+	/*!@brief 要素に制約を与えることで、動的メモリを使わずに単方向リストライクに使えるコンテナ。
+	@detail chainと同様の制約を要素に与えることで、動的メモリ確保を不要とした単方向リストとして使えるコンテナ。
+	コンテナのインターフェースは標準ライブラリの単方向リストコンテナ、std::foward_listに準ずる。*/
 	template<typename T>
 	struct forward_chain : private forward_chain_base{
 	private:
@@ -620,10 +620,10 @@ namespace xc{
 	}
 	
 	typedef forward_chain_element_t sorted_chain_element;
-	/*!@brief �v�f�ɐ����^���邱�ƂŁA���I���������g�킸�ɗD�揇�ʕt���L���[���C�N�g����R���e�i�B
-	@detail chain�Ɠ��l�̐����v�f�ɗ^���邱�ƂŁA���I�������m�ۂ�s�v�Ƃ����D�揇�ʕt���L���[�Ƃ��Ďg����R���e�i�B
-	�R���e�i�̃C���^�[�t�F�[�X�͕W�����C�u�����̗D�揇�ʕt���L���[�Astd::priority_queue�ɏ�����B
-	�������Apriority_queue�Ɣ�r���āAcompare�̍�p���t�ƂȂ��Ă���B*/
+	/*!@brief 要素に制約を与えることで、動的メモリを使わずに優先順位付きキューライク使えるコンテナ。
+	@detail chainと同様の制約を要素に与えることで、動的メモリ確保を不要とした優先順位付きキューとして使えるコンテナ。
+	コンテナのインターフェースは標準ライブラリの優先順位付きキュー、std::priority_queueに準ずる。
+	ただし、priority_queueと比較して、compareの作用が逆となっている。*/
 	template<typename T, typename compare_ = std::less<T>>
 	struct sorted_chain: public forward_chain_base{
 	private:

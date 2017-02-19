@@ -11,7 +11,7 @@ namespace xc{
 		invalid_future_exception(code_type Clde_) :exception(Clde_){}
 	};
 
-	//future‚Ö‚Ìpromise‚©‚ç‚ÌƒCƒ“ƒ^[ƒtƒF[ƒX
+	//futureã¸ã®promiseã‹ã‚‰ã®ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹
 	template<typename T>
 	class promise_base{
 	public:
@@ -47,9 +47,9 @@ namespace xc{
 		virtual void then(const func_type&) = 0;
 	};
 
-	//future: «—ˆæ“¾‚Å‚«‚é’l‚Ö‚ÌƒAƒNƒZƒbƒT
-	//	then_promise_baseƒCƒ“ƒ^[ƒtƒF[ƒX‚ğó‚¯æ‚Á‚Ä¶¬
-	//	then‚ªÀs‰Â”\
+	//future: å°†æ¥å–å¾—ã§ãã‚‹å€¤ã¸ã®ã‚¢ã‚¯ã‚»ãƒƒã‚µ
+	//	then_promise_baseã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã‚’å—ã‘å–ã£ã¦ç”Ÿæˆ
+	//	thenãŒå®Ÿè¡Œå¯èƒ½
 	
 	template<typename T, typename Alloc = default_allocator>
 	class future{
@@ -102,7 +102,7 @@ namespace xc{
 		}
 		my_promise* get_promise(){ return Ptr; }
 	};
-	//void‚Ö‚Ì“Áê‰»future
+	//voidã¸ã®ç‰¹æ®ŠåŒ–future
 	template<typename Alloc>
 	class future<void, Alloc>{
 		typedef function<void(void), Alloc> func_type;
@@ -154,9 +154,9 @@ namespace xc{
 		my_promise* get_promise(){ return Ptr; }
 	};
 
-	//polling_future: «—ˆæ“¾‚Å‚«‚é’l‚Ö‚ÌƒAƒNƒZƒbƒT
-	//	promise_baseƒCƒ“ƒ^[ƒtƒF[ƒX‚ğó‚¯æ‚Á‚Ä¶¬
-	//	then‚ª—˜—p‚Å‚«‚È‚¢
+	//polling_future: å°†æ¥å–å¾—ã§ãã‚‹å€¤ã¸ã®ã‚¢ã‚¯ã‚»ãƒƒã‚µ
+	//	promise_baseã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã‚’å—ã‘å–ã£ã¦ç”Ÿæˆ
+	//	thenãŒåˆ©ç”¨ã§ããªã„
 	template<typename T, typename Alloc = default_allocator>
 	class polling_future{
 		typedef promise_base<T> my_promise;
@@ -185,7 +185,7 @@ namespace xc{
 		}
 		my_promise* get_promise(){ return Ptr; }
 	};
-	//void‚Ö‚Ì“Áê‰»future
+	//voidã¸ã®ç‰¹æ®ŠåŒ–future
 	template<typename Alloc>
 	class polling_future<void, Alloc>{
 		typedef promise_base<void> my_promise;
@@ -213,8 +213,8 @@ namespace xc{
 		my_promise* get_promise(){ return Ptr; }
 	};
 
-	//•W€promiseF“à•”‚É•Ï”‚ğ•Û‚·‚éŒ`‚Ìpromise
-	//	’l‚ÌƒZƒbƒg‚ÍApromise‚É‘Î‚µ‚Äset_valueŠÖ”‚ğ—˜—p‚·‚é‚±‚Æ‚Ås‚¤
+	//æ¨™æº–promiseï¼šå†…éƒ¨ã«å¤‰æ•°ã‚’ä¿æŒã™ã‚‹å½¢ã®promise
+	//	å€¤ã®ã‚»ãƒƒãƒˆã¯ã€promiseã«å¯¾ã—ã¦set_valueé–¢æ•°ã‚’åˆ©ç”¨ã™ã‚‹ã“ã¨ã§è¡Œã†
 	template<typename T, typename Alloc = default_allocator>
 	class promise{
 		typedef promise<T, Alloc> my_type;
@@ -246,9 +246,9 @@ namespace xc{
 
 				InformFunc = InformFunc_;
 
-				//‘‚«‚İÏ‚İ‚È‚çAInformFunc‚ğÀs
-				//	end_write‚ªŠ„‚è‚İ‚ÅÀs‚³‚ê‚½ê‡‚ª‚ ‚é‚Ì‚ÅA
-				//	IsValid‚à‚à‚¤ˆê“x’²‚×‚é•K—v‚ª‚ ‚éB
+				//æ›¸ãè¾¼ã¿æ¸ˆã¿ãªã‚‰ã€InformFuncã‚’å®Ÿè¡Œ
+				//	end_writeãŒå‰²ã‚Šè¾¼ã¿ã§å®Ÿè¡Œã•ã‚ŒãŸå ´åˆãŒã‚ã‚‹ã®ã§ã€
+				//	IsValidã‚‚ã‚‚ã†ä¸€åº¦èª¿ã¹ã‚‹å¿…è¦ãŒã‚ã‚‹ã€‚
 				if(!IsWaiting && IsValid){
 					func_type tmpFunc;
 					tmpFunc.swap(InformFunc);
@@ -286,7 +286,7 @@ namespace xc{
 		base Base;
 	public:
 		promise():Base(){}
-	private://ƒRƒs[‹Ö~
+	private://ã‚³ãƒ”ãƒ¼ç¦æ­¢
 		promise(const my_type&){}
 		const my_type& operator=(const my_type&);
 	public:
@@ -305,7 +305,7 @@ namespace xc{
 			return my_future(Base);
 		}
 	};
-	//void‚Ö‚Ì“Áê‰»•W€promise
+	//voidã¸ã®ç‰¹æ®ŠåŒ–æ¨™æº–promise
 	template<typename Alloc>
 	class promise<void, Alloc>{
 		typedef promise<void, Alloc> my_type;
@@ -334,9 +334,9 @@ namespace xc{
 
 				InformFunc = InformFunc_;
 
-				//‘‚«‚İÏ‚İ‚È‚çAInformFunc‚ğÀs
-				//	end_write‚ªŠ„‚è‚İ‚ÅÀs‚³‚ê‚½ê‡‚ª‚ ‚é‚Ì‚ÅA
-				//	IsValid‚à‚à‚¤ˆê“x’²‚×‚é•K—v‚ª‚ ‚éB
+				//æ›¸ãè¾¼ã¿æ¸ˆã¿ãªã‚‰ã€InformFuncã‚’å®Ÿè¡Œ
+				//	end_writeãŒå‰²ã‚Šè¾¼ã¿ã§å®Ÿè¡Œã•ã‚ŒãŸå ´åˆãŒã‚ã‚‹ã®ã§ã€
+				//	IsValidã‚‚ã‚‚ã†ä¸€åº¦èª¿ã¹ã‚‹å¿…è¦ãŒã‚ã‚‹ã€‚
 				if(IsWritten && IsValid){
 					func_type tmpFunc;
 					tmpFunc.swap(InformFunc);
@@ -367,7 +367,7 @@ namespace xc{
 		};
 	private:
 		base Base;
-	private://ƒRƒs[‹Ö~
+	private://ã‚³ãƒ”ãƒ¼ç¦æ­¢
 		promise(const my_type&){}
 		const my_type& operator=(const my_type&);
 	public:
