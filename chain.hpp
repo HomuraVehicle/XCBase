@@ -758,7 +758,7 @@ namespace xc{
 		T& next(){ return static_cast<T&>(base::next(Sentinel)); }
 		const T& next()const{ return static_cast<const T&>(base::next(Sentinel)); }
 		void push(element& Elem){
-			element* p1 = Sentinel.next;
+			element* p1 = &base::next(Sentinel);
 			element* p2 = &Sentinel;
 			while(true){
 				//check with p2 < Elem < p1?
@@ -766,14 +766,14 @@ namespace xc{
 					base::insert_after_element(Elem, *p1);
 					return;
 				}
-				p2 = p1->next;
+				p2 = &base::next(*p1);
 
 				//check with p1 < Elem < p2?
 				if(p2 == &Sentinel || Comp(static_cast<T&>(Elem), static_cast<T&>(*p2))){
 					base::insert_after_element(Elem, *p2);
 					return;
 				}
-				p1 = p2->next;
+				p1 = &base::next(*p2);
 			}
 		}
 		void pop(){
